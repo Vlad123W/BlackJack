@@ -123,24 +123,23 @@ namespace BlackJack
             IDealer.EndTheGame = true;
             return true;
         }
-        
+      
         public void Split(ObservableCollection<IPlayer> splitHands)
         {
-            IPlayer hand1 = _player;
-            IPlayer hand2 = _player;
+            Player hand1 = new();
+            Player hand2 = new();
 
-            hand1.Hand.PairCards[0] = _player.Hand.PairCards[0];
-            hand2.Hand.PairCards[0] = _player.Hand.PairCards[1];
+            hand1.Hand.PairCards.Add(_player.Hand.PairCards[0]);
+            hand2.Hand.PairCards.Add(_player.Hand.PairCards[1]);
+
+            hand1.Money = _player.Money;
+            hand2.Money = _player.Money;
+
+            hand1.Bet = _player.Bet;
+            hand2.Bet = _player.Bet;
 
             splitHands.Add(hand1);
             splitHands.Add(hand2);
-        }
-
-        public bool SplitHit(IPlayer player)
-        {
-            
-
-            return false;
         }
     }
 }

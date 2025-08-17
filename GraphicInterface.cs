@@ -54,7 +54,8 @@ namespace BlackJack
         {
             _player = player;
             _dealer = dealer;
-            _dealer.Hand.PairCards[1].IsHidden = p[0];
+            if (_dealer.Hand.PairCards[1] != null)
+                _dealer.Hand.PairCards[1].IsHidden = p[0];
         }
 
         public void Print()

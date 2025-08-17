@@ -12,7 +12,7 @@ namespace BlackJack
     {
         private readonly IPlayer _player;
         private readonly IDealer _dealer;
-        private readonly IActions _actions;
+        private IActions _actions;
 
         private bool IsGameJustStarted;
 
@@ -136,12 +136,13 @@ namespace BlackJack
 
                 oper = Console.ReadLine()![0];
 
-                if (giClosed.MenuString.Contains(acts[oper].Method.Name) && (bool)acts![oper].DynamicInvoke()!) return;
+                if (acts[oper].Method.Name != "Split" && giClosed.MenuString.Contains(acts[oper].Method.Name) && (bool)acts![oper].DynamicInvoke()!) return;
                 else if (acts[oper].Method.Name == "Split" && giClosed.MenuString.Contains(acts[oper].Method.Name))
                 {
                     splitHands = [];
                     acts[oper].DynamicInvoke(splitHands);
                     SplitCycle(splitHands.Count);
+                    _actions = new Actions(_player, _dealer);
                 }
             }
         }
@@ -150,8 +151,9 @@ namespace BlackJack
         {
             if (handCount == 0) return;
 
-            SplitCycle(handCount--);
-            
+            SplitCycle(handCount - 1);
+
+            _actions = new Actions(splitHands[handCount - 1], _dealer);
             Console.WriteLine("HAND " + handCount);
 
             while (true)

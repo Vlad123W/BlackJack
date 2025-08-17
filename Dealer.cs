@@ -63,6 +63,14 @@ namespace BlackJack
             mainCards.Clear();
             mainCards = [.. playDeck.deck];
             IsHitted = false;
+
+            foreach (var item in playDeck.deck)
+            {
+                if(item.IsHidden)
+                {
+                    item.IsHidden = false;
+                }
+            }
         }
     }
 }
