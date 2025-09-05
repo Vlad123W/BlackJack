@@ -142,6 +142,7 @@ namespace BlackJack
                     splitHands = [];
                     acts[oper].DynamicInvoke(splitHands);
                     SplitCycle(splitHands.Count);
+                    splitHands.Clear();
                     _actions = new Actions(_player, _dealer);
                 }
             }
@@ -156,11 +157,11 @@ namespace BlackJack
             _actions = new Actions(splitHands[handCount - 1], _dealer);
             Console.WriteLine("HAND " + handCount);
 
+            giClosed = new(splitHands![handCount - 1], _dealer, [true]);
+            giClosed.Print();
+
             while (true)
             {
-                giClosed = new(splitHands![handCount - 1], _dealer, [true]);
-                giClosed.Print();
-
                 char oper = Console.ReadLine()![0];
                 if ((bool)acts![oper].DynamicInvoke()!) return;
             }
