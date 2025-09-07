@@ -11,15 +11,7 @@ namespace BlackJack
         private string? title;
         public string Title
         {
-            get
-            {
-                if(!IsHidden)
-                {
-                    return title!;
-                }
-
-                return "?";
-            }
+            get => !IsHidden ? title! : "?";
 
             set => title = value;
         }

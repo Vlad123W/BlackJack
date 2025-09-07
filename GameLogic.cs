@@ -14,20 +14,18 @@ namespace BlackJack
         private readonly IDealer _dealer;
         private IActions _actions;
 
-        private bool IsGameJustStarted;
+        private bool IsGameJustStarted = true;
 
-        private GraphicInterface? giOpened;
-        private GraphicInterface? giClosed;
+        private GraphicInterface? graphInter;
         
         private readonly Delegate _hit;
         private readonly Delegate _stand;
         private readonly Delegate _double;
-        private readonly Delegate _exit;
         private readonly Delegate _split;
 
         private readonly Dictionary<char, Delegate>? acts = [];
 
-        private ObservableCollection<IPlayer>? splitHands;
+        private Stack<IPlayer>? splitHands;
         private List<Card>? cards = [];
 
         public GameLogic(IPlayer player, IDealer dealer, IActions actions)
@@ -38,10 +36,14 @@ namespace BlackJack
             _hit = actions.Hit;
             _stand = actions.Stand;
             _double = actions.Double;
-            _exit = actions.Exit;
             _split = actions.Split;
 
-            IsGameJustStarted = true;
+            _actions.Hitted += Actions_Hitted;
+        }
+
+        private void Actions_Hitted()
+        {
+            graphInter?.Print();
         }
 
         public void BeginGame()
@@ -52,7 +54,6 @@ namespace BlackJack
             acts.Add('2', _stand);
             acts.Add('3', _double);
             acts.Add('4', _split);
-            acts.Add('0', _exit);
 
             while(true)
             {
@@ -79,13 +80,15 @@ namespace BlackJack
                 _player.Hand.PairCards.Add(cards[i]);
                 _dealer.Hand.PairCards.Add(cards[i + 2]);
             }
+
+            graphInter = new(_player, _dealer, [true]) { IsDoubleNeeded = true };
         }
 
         private void MainCycle()
         {
             char oper = ' ';
             
-            while (oper != '0')
+            while (true)
             {
                 if(IsGameJustStarted)
                 {
@@ -96,13 +99,14 @@ namespace BlackJack
                 if (Conditions.IsBlackJack(_player.Hand))
                 {
                     _player.ChangeMoney(_player.Bet * 1.5m);
+                    
                    
-                    giOpened = new GraphicInterface(_player, _dealer, [false])
+                    GraphicInterface graphInter = new(_player, _dealer, [false])
                     {
                         WinMessage = "You win! You have a Black Jack!\n"
                     };
 
-                    giOpened.Print();
+                    graphInter.Print();
                     
                     return;
                 }
@@ -113,22 +117,15 @@ namespace BlackJack
 
                     if (_player.Hand.PairCards[0].Title[0] == _player.Hand.PairCards[1].Title[0])
                     {
-                        giClosed = new GraphicInterface(_player, _dealer, [true])
-                        {
-                            IsSplitNeeded = true,
-                            IsDoubleNeeded = true
-                        };
+                        
+                        graphInter.IsSplitNeeded = true;
+                        graphInter.IsDoubleNeeded = true;
 
-                        giClosed.Print();
+                        graphInter.Print();
                     }
                     else
                     {
-                        giClosed = new GraphicInterface(_player, _dealer, [true])
-                        {
-                            IsDoubleNeeded = true
-                        };
-
-                        giClosed.Print();
+                        graphInter.Print();
                     }
                     
                     IsGameJustStarted = false;
@@ -136,34 +133,41 @@ namespace BlackJack
 
                 oper = Console.ReadLine()![0];
 
-                if (acts[oper].Method.Name != "Split" && giClosed.MenuString.Contains(acts[oper].Method.Name) && (bool)acts![oper].DynamicInvoke()!) return;
-                else if (acts[oper].Method.Name == "Split" && giClosed.MenuString.Contains(acts[oper].Method.Name))
+                if (oper == '0' || !acts.ContainsKey(oper)) Environment.Exit(0);
+
+                if (acts[oper].Method.Name != "Split" 
+                    && graphInter.MenuString.Contains(acts[oper].Method.Name) 
+                    && (bool)acts![oper].DynamicInvoke()!) return;
+                else if (acts[oper].Method.Name == "Split" && graphInter.MenuString.Contains(acts[oper].Method.Name))
                 {
                     splitHands = [];
                     acts[oper].DynamicInvoke(splitHands);
-                    SplitCycle(splitHands.Count);
-                    splitHands.Clear();
+                    SplitCycle();
                     _actions = new Actions(_player, _dealer);
+
                 }
             }
         }
 
-        private void SplitCycle(int handCount)
+        private void SplitCycle()
         {
-            if (handCount == 0) return;
-
-            SplitCycle(handCount - 1);
-
-            _actions = new Actions(splitHands[handCount - 1], _dealer);
-            Console.WriteLine("HAND " + handCount);
-
-            giClosed = new(splitHands![handCount - 1], _dealer, [true]);
-            giClosed.Print();
-
-            while (true)
+            while (splitHands?.Count != 0)
             {
-                char oper = Console.ReadLine()![0];
-                if ((bool)acts![oper].DynamicInvoke()!) return;
+                Player player = (Player)splitHands?.Pop()!;
+
+                _actions = new Actions(player, _dealer);
+                Console.WriteLine($"HAND {splitHands.Count + 1}");
+
+                var gi = new GraphicInterface(player, _dealer, [true]);
+                gi.Print();
+
+                bool res = false;
+
+                while (!res)
+                {
+                    char oper = Console.ReadLine()![0];
+                    res = (bool)acts![oper].DynamicInvoke()!;
+                }
             }
         }
     }

@@ -21,13 +21,6 @@ namespace BlackJack
         {
             _player = player;
             _dealer = dealer;
-            Hitted += Actions_Hitted;
-        }
-
-        private void Actions_Hitted()
-        {
-            IGraphicInterface _gi = new GraphicInterface(_player, _dealer, [true]);
-            _gi.Print();
         }
 
         public bool Hit()
@@ -36,7 +29,7 @@ namespace BlackJack
 
             _player.Hand.PairCards.Add(_dealer.Pull());
             
-            IGraphicInterface _gi;
+            GraphicInterface _gi;
 
             if(Conditions.IsBlackJack(_player.Hand))
             {
@@ -73,7 +66,7 @@ namespace BlackJack
 
         public bool Stand()
         {
-            while (_dealer.Hand.GetScore() < _player.Hand.GetScore() && Conditions.CanHit(_dealer.Hand))
+            while (_dealer.Hand.GetScore() < _player.Hand.GetScore() && Conditions.CanHit(_dealer.Hand) && _dealer.Hand.PairCards.Count < 5)
             {
                 _dealer.Hand.PairCards.Add(_dealer.Pull());
             }
@@ -82,9 +75,7 @@ namespace BlackJack
             {
                 _player.ChangeMoney(_player.Bet * 2m);
                 
-                IGraphicInterface _gi;
-                
-                _gi = new GraphicInterface(_player, _dealer, [false])
+                GraphicInterface _gi = new(_player, _dealer, [false])
                 {
                     WinMessage = "You win! Dealer is busted!\n"
                 };
@@ -98,7 +89,7 @@ namespace BlackJack
             else
             {
 
-                IGraphicInterface gi = new GraphicInterface(_player, _dealer, [false])
+                GraphicInterface gi = new(_player, _dealer, [false])
                 {
                     WinMessage = Conditions.EvaluateWinner(_player, _dealer)
                 };
@@ -118,13 +109,7 @@ namespace BlackJack
             return true;
         }
 
-        public bool Exit()
-        {
-            IDealer.EndTheGame = true;
-            return true;
-        }
-      
-        public void Split(ObservableCollection<IPlayer> splitHands)
+        public void Split(Stack<IPlayer> splitHands)
         {
             Player hand1 = new();
             Player hand2 = new();
@@ -138,8 +123,8 @@ namespace BlackJack
             hand1.Bet = _player.Bet;
             hand2.Bet = _player.Bet;
 
-            splitHands.Add(hand1);
-            splitHands.Add(hand2);
+            splitHands.Push(hand1);
+            splitHands.Push(hand2);
         }
     }
 }
