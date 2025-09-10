@@ -1,4 +1,6 @@
-﻿namespace BlackJack.Interfaces
+﻿using BlackJack.Implementation;
+
+namespace BlackJack.Interfaces
 {
     public interface IHand
     {

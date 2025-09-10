@@ -7,7 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlackJack
+namespace BlackJack.Implementation
 {
     public class Actions : IActions
     {
@@ -15,6 +15,7 @@ namespace BlackJack
         private readonly IDealer _dealer;
 
         private const int MAX_STAND_SCORE_VALUE = 17;
+
         public event IActions.Notify? Hitted;
         public event IActions.Notify? GameEnded;
 
@@ -96,6 +97,7 @@ namespace BlackJack
                 };
 
                 gi.Print();
+
                 GameEnded?.Invoke();
             }
 
