@@ -94,25 +94,7 @@ namespace BlackJack
                 {
                     Console.Write("Make a bet -> ");
                     _player.Bet = decimal.Parse(Console.ReadLine()!);
-                }
 
-                if (Conditions.IsBlackJack(_player.Hand))
-                {
-                    _player.ChangeMoney(_player.Bet * 1.5m);
-                    
-                   
-                    GraphicInterface graphInter = new(_player, _dealer, [false])
-                    {
-                        WinMessage = "You win! You have a Black Jack!\n"
-                    };
-
-                    graphInter.Print();
-                    
-                    return;
-                }
-
-                if(IsGameJustStarted)
-                {
                     if (_player.Hand.PairCards.All(x => x.Title.Contains('A'))) _player.Hand.PairCards[0].Cost = 1;
 
                     if (_player.Hand.PairCards[0].Title[0] == _player.Hand.PairCards[1].Title[0])
@@ -130,6 +112,22 @@ namespace BlackJack
                     
                     IsGameJustStarted = false;
                 }
+
+                if (Conditions.IsBlackJack(_player.Hand))
+                {
+                    _player.ChangeMoney(_player.Bet * 1.5m);
+                    
+                   
+                    GraphicInterface graphInter = new(_player, _dealer, [false])
+                    {
+                        WinMessage = "You win! You have a Black Jack!\n"
+                    };
+
+                    graphInter.Print();
+                    
+                    return;
+                }
+
 
                 oper = Console.ReadLine()![0];
 
@@ -156,7 +154,7 @@ namespace BlackJack
                 Player player = (Player)splitHands?.Pop()!;
 
                 _actions = new Actions(player, _dealer);
-                Console.WriteLine($"HAND {splitHands.Count + 1}");
+                Console.WriteLine($"HAND {splitHands?.Count + 1}");
 
                 var gi = new GraphicInterface(player, _dealer, [true]);
                 gi.Print();

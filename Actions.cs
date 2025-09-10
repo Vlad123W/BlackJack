@@ -14,6 +14,7 @@ namespace BlackJack
         private readonly IPlayer _player;
         private readonly IDealer _dealer;
 
+        private const int MAX_STAND_SCORE_VALUE = 17;
         public event IActions.Notify? Hitted;
         public event IActions.Notify? GameEnded;
 
@@ -66,7 +67,7 @@ namespace BlackJack
 
         public bool Stand()
         {
-            while (_dealer.Hand.GetScore() < _player.Hand.GetScore() && Conditions.CanHit(_dealer.Hand) && _dealer.Hand.PairCards.Count < 5)
+            while (_dealer.Hand.GetScore() < MAX_STAND_SCORE_VALUE && Conditions.CanHit(_dealer.Hand) && _dealer.Hand.PairCards.Count < 5)
             {
                 _dealer.Hand.PairCards.Add(_dealer.Pull());
             }
