@@ -26,7 +26,7 @@ namespace BlackJack.Implementation
 
         private readonly Dictionary<char, Delegate>? acts = [];
 
-        private Stack<IPlayer>? splitHands;
+        private Stack<Player>? splitHands;
         private List<Card>? cards = [];
 
         public GameLogic(IPlayer player, IDealer dealer, IActions actions)
@@ -148,7 +148,7 @@ namespace BlackJack.Implementation
         {
             while (splitHands?.Count != 0)
             {
-                Player player = (Player)splitHands?.Pop()!;
+                Player player = splitHands?.Pop()!;
 
                 _actions = new Actions(player, _dealer);
                 Console.WriteLine($"HAND {splitHands?.Count + 1}");
