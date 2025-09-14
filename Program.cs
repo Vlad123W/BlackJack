@@ -1,4 +1,6 @@
-﻿using BlackJack.Interfaces;
+﻿using BlackJack.Implementation;
+using BlackJack.Interfaces;
+using Newtonsoft.Json;
 
 namespace BlackJack
 {
@@ -6,8 +8,8 @@ namespace BlackJack
     {
         static void Main(string[] args)
         {
-            IPlayer player = new Player();
-            IDealer dealer = new Dealer();
+            Player player = new();
+            Dealer dealer = new();
 
             IActions actions = new Actions(player, dealer);
 

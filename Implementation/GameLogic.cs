@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft;
 
 namespace BlackJack.Implementation
 {
@@ -33,6 +34,7 @@ namespace BlackJack.Implementation
             _player = player;
             _dealer = dealer;
             _actions = actions;
+
             _hit = actions.Hit;
             _stand = actions.Stand;
             _double = actions.Double;
@@ -40,12 +42,8 @@ namespace BlackJack.Implementation
 
             _actions.Hitted += Actions_Hitted;
         }
-
         private void Actions_Hitted()
-        {
-            graphInter?.Print();
-        }
-
+              =>  graphInter?.Print();
         public void BeginGame()
         {
             Initialize();
@@ -99,7 +97,6 @@ namespace BlackJack.Implementation
 
                     if (_player.Hand.PairCards[0].Title[0] == _player.Hand.PairCards[1].Title[0])
                     {
-                        
                         graphInter.IsSplitNeeded = true;
                         graphInter.IsDoubleNeeded = true;
 
@@ -142,11 +139,11 @@ namespace BlackJack.Implementation
                     acts[oper].DynamicInvoke(splitHands);
                     SplitCycle();
                     _actions = new Actions(_player, _dealer);
-
+                    graphInter = new GraphicInterface(_player, _dealer, [true]);
                 }
             }
         }
-
+        
         private void SplitCycle()
         {
             while (splitHands?.Count != 0)
@@ -156,8 +153,8 @@ namespace BlackJack.Implementation
                 _actions = new Actions(player, _dealer);
                 Console.WriteLine($"HAND {splitHands?.Count + 1}");
 
-                var gi = new GraphicInterface(player, _dealer, [true]);
-                gi.Print();
+                graphInter = new GraphicInterface(player, _dealer, [true]);
+                graphInter.Print();
 
                 bool res = false;
 
