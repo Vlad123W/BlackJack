@@ -22,7 +22,7 @@ namespace BlackJack.Implementation
 
         public static string EvaluateWinner(IPlayer player, IDealer dealer)
         {
-            string winMessage = string.Empty;
+            string winMessage;
 
             if(player.Hand.GetScore() > dealer.Hand.GetScore())
             {

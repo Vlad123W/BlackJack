@@ -1,6 +1,7 @@
 ﻿using BlackJack.Implementation;
 using BlackJack.Interfaces;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BlackJack
 {
@@ -8,16 +9,17 @@ namespace BlackJack
     {
         static void Main(string[] args)
         {
-            Player player = new();
-            Dealer dealer = new();
+            ServiceCollection services = new();
+            services.AddSingleton<IPlayer, Player>();
+            services.AddSingleton<IDealer, Dealer>();
+            services.AddSingleton<IActions, Actions>();
+            services.AddSingleton<IGameLogic, GameLogic>();
 
-            IActions actions = new Actions(player, dealer);
+            ServiceProvider provider = services.BuildServiceProvider();
+            
+            provider.GetService<IGameLogic>()?.BeginGame();
 
-            IGameLogic gameLogic = new GameLogic(player, dealer, actions);
-            gameLogic.BeginGame();
 
-            Console.WriteLine("Press any key....");
-            Console.ReadKey();
         }
     }
 }

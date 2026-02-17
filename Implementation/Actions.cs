@@ -9,21 +9,15 @@ using System.Threading.Tasks;
 
 namespace BlackJack.Implementation
 {
-    public class Actions : IActions
+    public class Actions(IPlayer player, IDealer dealer) : IActions
     {
-        private readonly IPlayer _player;
-        private readonly IDealer _dealer;
+        private readonly IPlayer _player = player;
+        private readonly IDealer _dealer = dealer;
 
         private const int MAX_STAND_SCORE_VALUE = 17;
 
         public event IActions.Notify? Hitted;
         public event IActions.Notify? GameEnded;
-
-        public Actions(IPlayer player, IDealer dealer)
-        {
-            _player = player;
-            _dealer = dealer;
-        }
 
         public bool Hit()
         {

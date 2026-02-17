@@ -42,6 +42,7 @@ namespace BlackJack.Implementation
 
             _actions.Hitted += Actions_Hitted;
         }
+
         private void Actions_Hitted()
               =>  graphInter?.Print();
         public void BeginGame()
