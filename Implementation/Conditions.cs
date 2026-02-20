@@ -23,15 +23,12 @@ namespace BlackJack.Implementation
         public static string EvaluateWinner(IPlayer player, IDealer dealer)
         {
             string winMessage;
-
-            if(player.Hand.GetScore() > dealer.Hand.GetScore())
+            if (player.Hand.GetScore() > dealer.Hand.GetScore())
             {
-                player.ChangeMoney(player.Bet * 1.5m);
                 winMessage = $"You win! {player.Hand.GetScore()} > {dealer.Hand.GetScore()}";
             }
-            else if(player.Hand.GetScore() < dealer.Hand.GetScore())
+            else if (player.Hand.GetScore() < dealer.Hand.GetScore())
             {
-                player.ChangeMoney(-player.Bet);
                 winMessage = $"You lost! {player.Hand.GetScore()} < {dealer.Hand.GetScore()}";
             }
             else

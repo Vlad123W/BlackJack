@@ -1,5 +1,4 @@
-﻿using BlackJack.Implementation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +11,6 @@ namespace BlackJack.Interfaces
         void ChangeMoney(decimal income);
         decimal Money { get; set; }
         decimal Bet { get; set; }
-        Hand Hand { get; set; }
+        IHand Hand { get; set; }
     }
 }

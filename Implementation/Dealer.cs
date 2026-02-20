@@ -10,11 +10,11 @@ namespace BlackJack.Implementation
     public class Dealer : IDealer
     {
         private readonly Deck playDeck;
-        
+
         private List<Card> mainCards;
 
         private List<Card> _readyCards;
-        public List<Card> ReadyCards { get => _readyCards; set => _readyCards = value; }
+        public List<Card> ReadyCards { get => _readyCards; set => _readyCards = value ?? []; }
        
         private Random? rand;
 
@@ -30,7 +30,7 @@ namespace BlackJack.Implementation
         public Dealer()
         {
             playDeck = new();
-            mainCards = [.. playDeck.deck]; 
+            mainCards = [.. playDeck.deck];
             _readyCards = [];
         }
 
@@ -38,11 +38,11 @@ namespace BlackJack.Implementation
         {
             rand = new();
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4 && mainCards.Count > 0; i++)
             {
                 int index = rand.Next(mainCards.Count);
                 _readyCards.Add(mainCards[index]);
-                mainCards.Remove(mainCards[index]);
+                mainCards.RemoveAt(index);
             }
 
             return [.. _readyCards];
@@ -52,9 +52,12 @@ namespace BlackJack.Implementation
         {
             rand = new();
 
-            int index = rand.Next(mainCards.Count);
+            if (mainCards.Count == 0) throw new InvalidOperationException("No more cards in the deck.");
 
-            return mainCards[index];
+            int index = rand.Next(mainCards.Count);
+            var card = mainCards[index];
+            mainCards.RemoveAt(index);
+            return card;
         }
 
         public void Refresh()
@@ -66,7 +69,7 @@ namespace BlackJack.Implementation
 
             foreach (var item in playDeck.deck)
             {
-                if(item.IsHidden)
+                if (item.IsHidden)
                 {
                     item.IsHidden = false;
                 }

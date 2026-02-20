@@ -50,12 +50,15 @@ namespace BlackJack.Implementation
             set { _isDoubleNeeded = value; }
         }
 
-        public GraphicInterface(IPlayer player, IDealer dealer,  params bool[] p)
+        public GraphicInterface(IPlayer player, IDealer dealer, bool hideDealerSecond = true)
         {
-            _player = player;
-            _dealer = dealer;
-            if (_dealer.Hand.PairCards[1] != null)
-                _dealer.Hand.PairCards[1].IsHidden = p[0];
+            _player = player ?? throw new ArgumentNullException(nameof(player));
+            _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
+
+            if (_dealer.Hand?.PairCards is not null && _dealer.Hand.PairCards.Count > 1)
+            {
+                _dealer.Hand.PairCards[1].IsHidden = hideDealerSecond;
+            }
         }
 
         public void Print()

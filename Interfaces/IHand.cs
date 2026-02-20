@@ -1,4 +1,5 @@
-﻿using BlackJack.Implementation;
+﻿using System.Collections.Generic;
+using BlackJack.Implementation;
 
 namespace BlackJack.Interfaces
 {
@@ -7,6 +8,6 @@ namespace BlackJack.Interfaces
         void Show();
         int GetScore();
         void Clear();
-        List<Card> PairCards { get; set; }
+        IList<Card> PairCards { get; set; }
     }
 }

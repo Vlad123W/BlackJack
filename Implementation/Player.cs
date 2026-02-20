@@ -10,7 +10,7 @@ namespace BlackJack.Implementation
     public class Player : IPlayer
     {
         private Hand _hand = new();
-        public Hand Hand { get => _hand; set => _hand = value; }
+        public IHand Hand { get => _hand; set => _hand = value as Hand ?? new Hand(); }
 
         private decimal _money = 1000;
         public decimal Money { get => _money; set => _money = value; }
@@ -38,6 +38,6 @@ namespace BlackJack.Implementation
         }
 
         public void ChangeMoney(decimal income)
-            => _money += _money > 0 ? income : throw new Exception("You're busted!");
+            => _money += income;
     }
 }

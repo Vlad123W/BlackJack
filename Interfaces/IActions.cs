@@ -11,6 +11,6 @@ namespace BlackJack.Interfaces
         bool Hit();
         bool Stand();
         bool Double();
-        void Split(Stack<IPlayer> splitHands);
+        void Split(Stack<IPlayer> splitHands); 
     }
 }

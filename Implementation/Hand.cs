@@ -9,8 +9,8 @@ namespace BlackJack.Implementation
 {
     public class Hand : IHand
     {
-        private List<Card> _paircards = [];
-        public List<Card> PairCards { get => _paircards; set => _paircards = value; }
+        private List<Card> _paircards = new();
+        public IList<Card> PairCards { get => _paircards; set => _paircards = value as List<Card> ?? [.. value ?? Enumerable.Empty<Card>()]; }
         
         public void Show()
         {

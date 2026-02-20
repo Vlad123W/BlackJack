@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BlackJack.Implementation
 {
@@ -19,26 +20,18 @@ namespace BlackJack.Implementation
 
         private GraphicInterface? graphInter;
         
-        private readonly Delegate _hit;
-        private readonly Delegate _stand;
-        private readonly Delegate _double;
-        private readonly Delegate _split;
+        private Stack<IPlayer>? splitHands;
+        private decimal? _splitStartingMoney;
+        private List<Card> cards = new();
 
-        private readonly Dictionary<char, Delegate>? acts = [];
+        private readonly IServiceProvider _provider;
 
-        private Stack<Player>? splitHands;
-        private List<Card>? cards = [];
-
-        public GameLogic(IPlayer player, IDealer dealer, IActions actions)
+        public GameLogic(IPlayer player, IDealer dealer, IActions actions, IServiceProvider provider)
         {
             _player = player;
             _dealer = dealer;
             _actions = actions;
-
-            _hit = actions.Hit;
-            _stand = actions.Stand;
-            _double = actions.Double;
-            _split = actions.Split;
+            _provider = provider;
 
             _actions.Hitted += Actions_Hitted;
         }
@@ -48,11 +41,6 @@ namespace BlackJack.Implementation
         public void BeginGame()
         {
             Initialize();
-
-            acts.Add('1', _hit);
-            acts.Add('2', _stand);
-            acts.Add('3', _double);
-            acts.Add('4', _split);
 
             while(true)
             {
@@ -68,19 +56,23 @@ namespace BlackJack.Implementation
 
         private void Initialize()
         {
-            if (_player.Hand.PairCards.Count != 0) _player.Hand.PairCards.Clear();
-            if (_dealer.Hand.PairCards.Count != 0) _dealer.Hand.PairCards.Clear();
-            if (cards.Count != 0) _dealer.Refresh();
+            _player.Hand.PairCards.Clear();
+            _dealer.Hand.PairCards.Clear();
+
+            if (cards.Count > 0) _dealer.Refresh();
 
             cards = _dealer.Shuffle();
 
-            for (int i = 0; i < 2; i++)
-            {
-                _player.Hand.PairCards.Add(cards[i]);
-                _dealer.Hand.PairCards.Add(cards[i + 2]);
-            }
+            if (cards.Count < 4) throw new InvalidOperationException("Not enough cards to initialize the game.");
 
-            graphInter = new(_player, _dealer, [true]) { IsDoubleNeeded = true };
+            _player.Hand.PairCards.Add(cards[0]);
+            _player.Hand.PairCards.Add(cards[1]);
+
+            _dealer.Hand.PairCards.Add(cards[2]);
+            _dealer.Hand.PairCards.Add(cards[3]);
+
+            graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, true);
+            graphInter.IsDoubleNeeded = true;
         }
 
         private void MainCycle()
@@ -116,10 +108,8 @@ namespace BlackJack.Implementation
                     _player.ChangeMoney(_player.Bet * 1.5m);
                     
                    
-                    GraphicInterface graphInter = new(_player, _dealer, [false])
-                    {
-                        WinMessage = "You win! You have a Black Jack!\n"
-                    };
+                    var graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, false);
+                    graphInter.WinMessage = "You win! You have a Black Jack!\n";
 
                     graphInter.Print();
                     
@@ -129,18 +119,37 @@ namespace BlackJack.Implementation
 
                 oper = Console.ReadLine()![0];
 
-                if (oper == '0' || !acts.ContainsKey(oper)) Environment.Exit(0);
+                if (oper == '0') Environment.Exit(0);
 
-                if (acts[oper].Method.Name != "Split" 
-                    && graphInter.MenuString.Contains(acts[oper].Method.Name) 
-                    && (bool)acts![oper].DynamicInvoke()!) return;
-                else if (acts[oper].Method.Name == "Split" && graphInter.MenuString.Contains(acts[oper].Method.Name))
+                if (oper == '3' && !graphInter.IsDoubleNeeded) continue;
+                if (oper == '4' && !graphInter.IsSplitNeeded) continue;
+
+                switch (oper)
                 {
-                    splitHands = [];
-                    acts[oper].DynamicInvoke(splitHands);
-                    SplitCycle();
-                    _actions = new Actions(_player, _dealer);
-                    graphInter = new GraphicInterface(_player, _dealer, [true]);
+                    case '1':
+                        if (_actions.Hit()) return;
+                        break;
+                    case '2':
+                        if (_actions.Stand()) return;
+                        break;
+                    case '3':
+                        if (_actions.Double()) return;
+                        break;
+                    case '4':
+                        _splitStartingMoney = _player.Money;
+                        splitHands = new Stack<IPlayer>();
+                        _actions.Split(splitHands);
+                        SplitCycle();
+
+                        var totalMoney = _player.Money;
+                        while (splitHands?.Count > 0) totalMoney += splitHands.Pop().Money;
+                        _player.Money = totalMoney;
+
+                        _actions = ActivatorUtilities.CreateInstance<Actions>(_provider, _player, _dealer);
+                        graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, true);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -149,12 +158,11 @@ namespace BlackJack.Implementation
         {
             while (splitHands?.Count != 0)
             {
-                Player player = splitHands?.Pop()!;
+                IPlayer player = splitHands!.Pop();
 
-                _actions = new Actions(player, _dealer);
-                Console.WriteLine($"HAND {splitHands?.Count + 1}");
-
-                graphInter = new GraphicInterface(player, _dealer, [true]);
+                _actions = ActivatorUtilities.CreateInstance<Actions>(_provider, player, _dealer);
+                Console.WriteLine($"HAND {splitHands.Count + 1}");
+                graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, player, _dealer, true);
                 graphInter.Print();
 
                 bool res = false;
@@ -162,7 +170,24 @@ namespace BlackJack.Implementation
                 while (!res)
                 {
                     char oper = Console.ReadLine()![0];
-                    res = (bool)acts![oper].DynamicInvoke()!;
+
+                    switch (oper)
+                    {
+                        case '0':
+                            Environment.Exit(0);
+                            break;
+                        case '1':
+                            res = _actions.Hit();
+                            break;
+                        case '2':
+                            res = _actions.Stand();
+                            break;
+                        case '3':
+                            if (graphInter.IsDoubleNeeded) res = _actions.Double();
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }

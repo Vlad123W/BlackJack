@@ -9,17 +9,22 @@ namespace BlackJack
     {
         static void Main(string[] args)
         {
-            ServiceCollection services = new();
+            var services = new ServiceCollection();
+
+            // Register implementations
             services.AddSingleton<IPlayer, Player>();
             services.AddSingleton<IDealer, Dealer>();
-            services.AddSingleton<IActions, Actions>();
-            services.AddSingleton<IGameLogic, GameLogic>();
 
-            ServiceProvider provider = services.BuildServiceProvider();
-            
-            provider.GetService<IGameLogic>()?.BeginGame();
+            // Actions and GameLogic depend on scoped/Transient services (IPlayer/IDealer are singletons here)
+            services.AddTransient<IActions, Actions>();
+            services.AddTransient<IGameLogic, GameLogic>();
 
+            var provider = services.BuildServiceProvider();
 
+            // Resolve GameLogic and run
+            using var scope = provider.CreateScope();
+            var game = scope.ServiceProvider.GetRequiredService<IGameLogic>();
+            game.BeginGame();
         }
     }
 }
