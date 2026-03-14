@@ -1,30 +1,40 @@
 ﻿using BlackJack.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BlackJack.Implementation
 {
+    /// <summary>
+    /// Handles player actions during the game (Hit, Stand, Double, Split).
+    /// Encapsulates the game logic for each action and its consequences.
+    /// </summary>
     public class Actions : IActions
     {
         private readonly IPlayer _player;
         private readonly IDealer _dealer;
-
-        private const int MaxStandScoreValue = 17;
+        private readonly IGraphicFactory _graphicFactory;
 
         public event IActions.Notify? Hitted;
         public event IActions.Notify? GameEnded;
 
-        private readonly IServiceProvider _provider;
-
-        public Actions(IPlayer player, IDealer dealer, IServiceProvider provider)
+        /// <summary>
+        /// Initializes a new instance of the Actions class.
+        /// </summary>
+        /// <param name="player">The player performing actions.</param>
+        /// <param name="dealer">The dealer object.</param>
+        /// <param name="graphicFactory">Factory for creating UI components.</param>
+        /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
+        public Actions(IPlayer player, IDealer dealer, IGraphicFactory graphicFactory)
         {
             _player = player ?? throw new ArgumentNullException(nameof(player));
             _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
-            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
         }
 
+        /// <summary>
+        /// Player requests another card.
+        /// </summary>
+        /// <returns>True if the round should end (blackjack or bust), false otherwise.</returns>
         public bool Hit()
         {
             IDealer.IsHitted = true;
@@ -32,26 +42,13 @@ namespace BlackJack.Implementation
 
             if (Conditions.IsBlackJack(_player.Hand))
             {
-                // Blackjack: player gets 1.5x the bet profit (common rule)
-                var payout = _player.Bet * 1.5m;
-                _player.ChangeMoney(payout);
-
-                var gi = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, true);
-                gi.WinMessage = "You win! Black Jack!\n";
-
-                gi.Print();
+                HandlePlayerBlackjack();
                 return true;
             }
 
             if (Conditions.IsBusted(_player.Hand))
             {
-                // Player loses their bet
-                _player.ChangeMoney(-_player.Bet);
-
-                var gi = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, true);
-                gi.WinMessage = "You lost! You're busted!\n";
-
-                gi.Print();
+                HandlePlayerBust();
                 return true;
             }
 
@@ -59,26 +56,88 @@ namespace BlackJack.Implementation
             return false;
         }
 
+        /// <summary>
+        /// Player ends their turn and dealer plays.
+        /// </summary>
+        /// <returns>Always true (round always ends).</returns>
         public bool Stand()
         {
-            while (_dealer.Hand.GetScore() < MaxStandScoreValue && Conditions.CanHit(_dealer.Hand) && _dealer.Hand.PairCards.Count < 5)
-            {
-                _dealer.Hand.PairCards.Add(_dealer.Pull());
-            }
+            ExecuteDealerTurn();
+
             if (Conditions.IsBusted(_dealer.Hand))
             {
-                // Player wins an amount equal to their bet
-                _player.ChangeMoney(_player.Bet);
-
-                var gi = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, false);
-                gi.WinMessage = "You win! Dealer is busted!\n";
-
-                gi.Print();
-                GameEnded?.Invoke();
+                HandleDealerBust();
                 return true;
             }
 
-            var outcome = Conditions.EvaluateWinner(_player, _dealer);
+            EvaluateAndDisplayOutcome();
+            return true;
+        }
+
+        /// <summary>
+        /// Player doubles their bet and takes one more card, then stands automatically.
+        /// </summary>
+        /// <returns>Always true (round always ends).</returns>
+        public bool Double()
+        {
+            _player.Bet *= GameConstants.DoubleMultiplier;
+            Hit();
+            Stand();
+            return true;
+        }
+
+        /// <summary>
+        /// Player splits a pair into two separate hands.
+        /// </summary>
+        /// <param name="splitHands">Stack to store the split hands.</param>
+        /// <exception cref="ArgumentNullException">Thrown when splitHands is null.</exception>
+        public void Split(Stack<IPlayer> splitHands)
+        {
+            ArgumentNullException.ThrowIfNull(splitHands);
+
+            if (!CanSplitHand())
+                return;
+
+            var splitPlayers = CreateSplitHands();
+            splitHands.Push(splitPlayers.Player1);
+            splitHands.Push(splitPlayers.Player2);
+        }
+
+        private void HandlePlayerBlackjack()
+        {
+            decimal payout = _player.Bet * GameConstants.BlackjackPayout;
+            _player.ChangeMoney(payout);
+
+            DisplayResult("You win! Black Jack!\n");
+        }
+
+        private void HandlePlayerBust()
+        {
+            _player.ChangeMoney(-_player.Bet);
+            DisplayResult("You lost! You're busted!\n");
+        }
+
+        private void HandleDealerBust()
+        {
+            _player.ChangeMoney(_player.Bet);
+            DisplayResult("You win! Dealer is busted!\n");
+            GameEnded?.Invoke();
+        }
+
+        private void ExecuteDealerTurn()
+        {
+            while (_dealer.Hand.GetScore() < GameConstants.DealerStandScore &&
+                   Conditions.CanHit(_dealer.Hand) &&
+                   _dealer.Hand.PairCards.Count < GameConstants.MaxCardsInHand)
+            {
+                _dealer.Hand.PairCards.Add(_dealer.Pull());
+            }
+        }
+
+        private void EvaluateAndDisplayOutcome()
+        {
+            string outcome = Conditions.EvaluateWinner(_player, _dealer);
+
             if (outcome.Contains("You win!"))
             {
                 _player.ChangeMoney(_player.Bet);
@@ -88,30 +147,26 @@ namespace BlackJack.Implementation
                 _player.ChangeMoney(-_player.Bet);
             }
 
-            var resultGi = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, false);
-            resultGi.WinMessage = outcome;
-
-            resultGi.Print();
+            DisplayResult(outcome);
             GameEnded?.Invoke();
-            return true;
         }
 
-        public bool Double()
+        private void DisplayResult(string message)
         {
-            _player.Bet *= 2m;
-            Hit();
-            Stand();
-            return true;
+            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+            display.WinMessage = message;
+            display.Print();
         }
 
-        public void Split(Stack<IPlayer> splitHands)
+        private bool CanSplitHand()
         {
-            ArgumentNullException.ThrowIfNull(splitHands);
+            return _player.Hand.PairCards.Count >= GameConstants.InitialCardsDealt;
+        }
 
-            if (_player.Hand.PairCards.Count < 2) return; 
-
-            var firstCard = _player.Hand.PairCards[0];
-            var secondCard = _player.Hand.PairCards[1];
+        private (IPlayer Player1, IPlayer Player2) CreateSplitHands()
+        {
+            var firstCard = _player.Hand.PairCards[GameConstants.PlayerFirstCardIndex];
+            var secondCard = _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex];
             _player.Hand.Clear();
 
             var hand1 = new Player();
@@ -123,15 +178,14 @@ namespace BlackJack.Implementation
             hand1.Bet = _player.Bet;
             hand2.Bet = _player.Bet;
 
-            var startingMoney = _player.Money;
+            decimal startingMoney = _player.Money;
             hand1.Money = startingMoney;
             hand2.Money = startingMoney;
 
             hand1.Hand.PairCards.Add(_dealer.Pull());
             hand2.Hand.PairCards.Add(_dealer.Pull());
 
-            splitHands.Push(hand1);
-            splitHands.Push(hand2);
+            return (hand1, hand2);
         }
     }
 }

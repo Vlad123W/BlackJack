@@ -1,195 +1,277 @@
 ﻿using BlackJack.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BlackJack.Implementation
 {
+    /// <summary>
+    /// Main game controller that orchestrates game flow.
+    /// Coordinates between player, dealer, actions, and UI.
+    /// </summary>
     public class GameLogic : IGameLogic
     {
         private readonly IPlayer _player;
         private readonly IDealer _dealer;
         private IActions _actions;
+        private readonly IGraphicFactory _graphicFactory;
+        private readonly IUserInputHandler _inputHandler;
 
-        private bool IsGameJustStarted = true;
+        private bool _isGameJustStarted = true;
+        private GraphicInterface? _gameDisplay;
+        private Stack<IPlayer>? _splitHands;
+        private List<Card> _deckCards = new();
 
-        private GraphicInterface? graphInter;
-        
-        private Stack<IPlayer>? splitHands;
-        private decimal? _splitStartingMoney;
-        private List<Card> cards = new();
-
-        private readonly IServiceProvider _provider;
-
-        public GameLogic(IPlayer player, IDealer dealer, IActions actions, IServiceProvider provider)
+        /// <summary>
+        /// Initializes a new instance of GameLogic.
+        /// </summary>
+        public GameLogic(IPlayer player, IDealer dealer, IActions actions, 
+            IGraphicFactory graphicFactory, IUserInputHandler inputHandler)
         {
             _player = player;
             _dealer = dealer;
             _actions = actions;
-            _provider = provider;
+            _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
+            _inputHandler = inputHandler ?? throw new ArgumentNullException(nameof(inputHandler));
 
-            _actions.Hitted += Actions_Hitted;
+            _actions.Hitted += OnPlayerHit;
         }
 
-        private void Actions_Hitted()
-              =>  graphInter?.Print();
+        /// <summary>
+        /// Starts the game loop.
+        /// </summary>
         public void BeginGame()
         {
-            Initialize();
+            InitializeRound();
 
-            while(true)
+            while (true)
             {
-                MainCycle();
-                
-                if (IDealer.EndTheGame) break;
-                
-                Initialize();
-               
-                IsGameJustStarted = true;
+                PlayMainCycle();
+
+                if (IDealer.EndTheGame)
+                    break;
+
+                InitializeRound();
+                _isGameJustStarted = true;
             }
         }
 
-        private void Initialize()
+        /// <summary>
+        /// Prepares the game for a new round.
+        /// </summary>
+        private void InitializeRound()
+        {
+            ClearPreviousHands();
+            ShuffleAndDeal();
+            DisplayInitialState();
+        }
+
+        /// <summary>
+        /// Main game loop for a single round.
+        /// </summary>
+        private void PlayMainCycle()
+        {
+            while (true)
+            {
+                if (_isGameJustStarted)
+                {
+                    ProcessInitialBet();
+                    _isGameJustStarted = false;
+
+                    if (Conditions.IsBlackJack(_player.Hand))
+                    {
+                        HandlePlayerBlackjack();
+                        return;
+                    }
+                }
+
+                PlayerAction action = GetPlayerAction();
+
+                if (!IsActionValid(action))
+                    continue;
+
+                if (ProcessPlayerAction(action))
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// Processes the split action and plays multiple hands.
+        /// </summary>
+        private void PlaySplitHands()
+        {
+            while (_splitHands?.Count > 0)
+            {
+                IPlayer splitPlayer = _splitHands.Pop();
+                int handNumber = _splitHands.Count + 1;
+
+                PlaySplitHandCycle(splitPlayer, handNumber);
+            }
+        }
+
+        /// <summary>
+        /// Plays a single split hand.
+        /// </summary>
+        private void PlaySplitHandCycle(IPlayer splitPlayer, int handNumber)
+        {
+            _actions = new Actions(splitPlayer, _dealer, _graphicFactory);
+            Console.WriteLine($"HAND {handNumber}");
+
+            _gameDisplay = (GraphicInterface)_graphicFactory.Create(splitPlayer, _dealer, true);
+            _gameDisplay.Print();
+
+            bool handFinished = false;
+
+            while (!handFinished)
+            {
+                PlayerAction action = GetPlayerAction();
+
+                handFinished = ProcessSplitHandAction(action);
+            }
+        }
+
+        private void ClearPreviousHands()
         {
             _player.Hand.PairCards.Clear();
             _dealer.Hand.PairCards.Clear();
 
-            if (cards.Count > 0) _dealer.Refresh();
-
-            cards = _dealer.Shuffle();
-
-            if (cards.Count < 4) throw new InvalidOperationException("Not enough cards to initialize the game.");
-
-            _player.Hand.PairCards.Add(cards[0]);
-            _player.Hand.PairCards.Add(cards[1]);
-
-            _dealer.Hand.PairCards.Add(cards[2]);
-            _dealer.Hand.PairCards.Add(cards[3]);
-
-            graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, true);
-            graphInter.IsDoubleNeeded = true;
+            if (_deckCards.Count > 0)
+                _dealer.Refresh();
         }
 
-        private void MainCycle()
+        private void ShuffleAndDeal()
         {
-            char oper = ' ';
-            
-            while (true)
+            _deckCards = _dealer.Shuffle();
+
+            if (_deckCards.Count < GameConstants.MinCardsToPlay)
+                throw new InvalidOperationException("Not enough cards to initialize the game.");
+
+            _player.Hand.PairCards.Add(_deckCards[GameConstants.PlayerFirstCardIndex]);
+            _player.Hand.PairCards.Add(_deckCards[GameConstants.PlayerSecondCardIndex]);
+
+            _dealer.Hand.PairCards.Add(_deckCards[GameConstants.DealerFirstCardIndex]);
+            _dealer.Hand.PairCards.Add(_deckCards[GameConstants.DealerSecondCardIndex]);
+        }
+
+        private void DisplayInitialState()
+        {
+            _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
+            _gameDisplay.IsDoubleNeeded = true;
+        }
+
+        private void ProcessInitialBet()
+        {
+            decimal bet = _inputHandler.ReadBet();
+            _player.Bet = bet;
+
+            AdjustAceIfNeeded();
+            UpdateMenuForInitialHand();
+            _gameDisplay?.Print();
+        }
+
+        private void AdjustAceIfNeeded()
+        {
+            if (_player.Hand.PairCards.All(x => x.Title.Contains('A')))
             {
-                if(IsGameJustStarted)
-                {
-                    Console.Write("Make a bet -> ");
-                    _player.Bet = decimal.Parse(Console.ReadLine()!);
-
-                    if (_player.Hand.PairCards.All(x => x.Title.Contains('A'))) _player.Hand.PairCards[0].Cost = 1;
-
-                    if (_player.Hand.PairCards[0].Title[0] == _player.Hand.PairCards[1].Title[0])
-                    {
-                        graphInter.IsSplitNeeded = true;
-                        graphInter.IsDoubleNeeded = true;
-
-                        graphInter.Print();
-                    }
-                    else
-                    {
-                        graphInter.Print();
-                    }
-                    
-                    IsGameJustStarted = false;
-                }
-
-                if (Conditions.IsBlackJack(_player.Hand))
-                {
-                    _player.ChangeMoney(_player.Bet * 1.5m);
-                    
-                   
-                    var graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, false);
-                    graphInter.WinMessage = "You win! You have a Black Jack!\n";
-
-                    graphInter.Print();
-                    
-                    return;
-                }
-
-
-                oper = Console.ReadLine()![0];
-
-                if (oper == '0') Environment.Exit(0);
-
-                if (oper == '3' && !graphInter.IsDoubleNeeded) continue;
-                if (oper == '4' && !graphInter.IsSplitNeeded) continue;
-
-                switch (oper)
-                {
-                    case '1':
-                        if (_actions.Hit()) return;
-                        break;
-                    case '2':
-                        if (_actions.Stand()) return;
-                        break;
-                    case '3':
-                        if (_actions.Double()) return;
-                        break;
-                    case '4':
-                        _splitStartingMoney = _player.Money;
-                        splitHands = new Stack<IPlayer>();
-                        _actions.Split(splitHands);
-                        SplitCycle();
-
-                        var totalMoney = _player.Money;
-                        while (splitHands?.Count > 0) totalMoney += splitHands.Pop().Money;
-                        _player.Money = totalMoney;
-
-                        _actions = ActivatorUtilities.CreateInstance<Actions>(_provider, _player, _dealer);
-                        graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, _player, _dealer, true);
-                        break;
-                    default:
-                        break;
-                }
+                _player.Hand.PairCards[0].Cost = 1;
             }
         }
-        
-        private void SplitCycle()
+
+        private void UpdateMenuForInitialHand()
         {
-            while (splitHands?.Count != 0)
+            bool isAPair = _player.Hand.PairCards[0].Title[0] == _player.Hand.PairCards[1].Title[0];
+
+            _gameDisplay!.IsSplitNeeded = isAPair;
+            _gameDisplay.IsDoubleNeeded = true;
+        }
+
+        private void HandlePlayerBlackjack()
+        {
+            _player.ChangeMoney(_player.Bet * GameConstants.BlackjackPayout);
+
+            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+            display.WinMessage = "You win! You have a Black Jack!\n";
+            display.Print();
+        }
+
+        private PlayerAction GetPlayerAction()
+        {
+            char input = _inputHandler.ReadAction();
+            return (PlayerAction)input;
+        }
+
+        private bool IsActionValid(PlayerAction action)
+        {
+            if (action == PlayerAction.Double && !_gameDisplay?.IsDoubleNeeded == true)
+                return false;
+
+            if (action == PlayerAction.Split && !_gameDisplay?.IsSplitNeeded == true)
+                return false;
+
+            return true;
+        }
+
+        private bool ProcessPlayerAction(PlayerAction action)
+        {
+            return action switch
             {
-                IPlayer player = splitHands!.Pop();
+                PlayerAction.Hit => _actions.Hit(),
+                PlayerAction.Stand => _actions.Stand(),
+                PlayerAction.Double => _actions.Double(),
+                PlayerAction.Split => ProcessSplit(),
+                PlayerAction.Exit => ExitGame(),
+                _ => false
+            };
+        }
 
-                _actions = ActivatorUtilities.CreateInstance<Actions>(_provider, player, _dealer);
-                Console.WriteLine($"HAND {splitHands.Count + 1}");
-                graphInter = ActivatorUtilities.CreateInstance<GraphicInterface>(_provider, player, _dealer, true);
-                graphInter.Print();
+        private bool ProcessSplitHandAction(PlayerAction action)
+        {
+            return action switch
+            {
+                PlayerAction.Exit => ExitGame(),
+                PlayerAction.Hit => _actions.Hit(),
+                PlayerAction.Stand => _actions.Stand(),
+                PlayerAction.Double when _gameDisplay?.IsDoubleNeeded == true => _actions.Double(),
+                _ => false
+            };
+        }
 
-                bool res = false;
+        private bool ProcessSplit()
+        {
+            _splitHands = new Stack<IPlayer>();
+            _actions.Split(_splitHands);
 
-                while (!res)
-                {
-                    char oper = Console.ReadLine()![0];
+            PlaySplitHands();
 
-                    switch (oper)
-                    {
-                        case '0':
-                            Environment.Exit(0);
-                            break;
-                        case '1':
-                            res = _actions.Hit();
-                            break;
-                        case '2':
-                            res = _actions.Stand();
-                            break;
-                        case '3':
-                            if (graphInter.IsDoubleNeeded) res = _actions.Double();
-                            break;
-                        default:
-                            break;
-                    }
-                }
+            CombineSplitHandsMoney();
+
+            _actions = new Actions(_player, _dealer, _graphicFactory);
+            _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
+
+            return false;
+        }
+
+        private void CombineSplitHandsMoney()
+        {
+            decimal totalMoney = _player.Money;
+
+            while (_splitHands?.Count > 0)
+            {
+                totalMoney += _splitHands.Pop().Money;
             }
+
+            _player.Money = totalMoney;
+        }
+
+        private bool ExitGame()
+        {
+            Environment.Exit(0);
+            return true;
+        }
+
+        private void OnPlayerHit()
+        {
+            _gameDisplay?.Print();
         }
     }
 }
