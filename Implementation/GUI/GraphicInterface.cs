@@ -1,0 +1,268 @@
+﻿using BlackJack.Implementation.Data;
+using BlackJack.Implementation.Entities;
+using BlackJack.Interfaces;
+
+namespace BlackJack.Implementation.GUI
+{
+    /// <summary>
+    /// Displays the game state and menu to the player with modern, colorful UI.
+    /// Responsible for all console output presentation.
+    /// </summary>
+    public class GraphicInterface : IGraphicInterface
+    {
+        private readonly IPlayer _player;
+        private readonly IDealer _dealer;
+        private readonly MenuBuilder _menuBuilder;
+
+        private bool _canSplit;
+        private bool _canDouble;
+
+        /// <summary>
+        /// Gets the dynamically built menu string based on available actions.
+        /// </summary>
+        public string MenuString => _menuBuilder.BuildMenu(_canDouble, _canSplit);
+
+        /// <summary>
+        /// Gets or sets the message to display about game outcome.
+        /// </summary>
+        public string WinMessage { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets whether the player can split their hand.
+        /// </summary>
+        public bool IsSplitNeeded
+        {
+            get => _canSplit;
+            set => _canSplit = value;
+        }
+
+        /// <summary>
+        /// Gets or sets whether the player can double down.
+        /// </summary>
+        public bool IsDoubleNeeded
+        {
+            get => _canDouble;
+            set => _canDouble = value;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the GraphicInterface class.
+        /// </summary>
+        /// <param name="player">The player's game state.</param>
+        /// <param name="dealer">The dealer's game state.</param>
+        /// <param name="hideDealerSecond">Whether to hide the dealer's second card.</param>
+        /// <exception cref="ArgumentNullException">Thrown when player or dealer is null.</exception>
+        public GraphicInterface(IPlayer player, IDealer dealer, bool hideDealerSecond = true)
+        {
+            _player = player ?? throw new ArgumentNullException(nameof(player));
+            _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
+            _menuBuilder = new MenuBuilder();
+
+            HideDealerSecondCardIfNeeded(hideDealerSecond);
+        }
+
+        /// <summary>
+        /// Displays the current game state to the console with modern styling.
+        /// </summary>
+        public void Print()
+        {
+            ClearScreen();
+            PrintGameHeader();
+            PrintDealerSection();
+            PrintPlayerSection();
+            PrintGameOutcome();
+            PrintMenu();
+            PrintFooter();
+        }
+
+        private void ClearScreen()
+        {
+            Console.WriteLine("\n");
+        }
+
+        private void PrintGameHeader()
+        {
+            Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("║     ♠️  BLACKJACK GAME  ♠️             ║", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightBlue));
+            Console.WriteLine();
+        }
+
+        private void PrintDealerSection()
+        {
+            Console.WriteLine(ConsoleColors.BoldColorText("┌─ DEALER ────────────────────────────┐", ConsoleColors.Cyan));
+
+            // Display cards in rows
+            DisplayCardsInRows(_dealer.Hand);
+
+            int dealerScore = _dealer.Hand.GetScore();
+            Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.Cyan));
+            Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow),-30}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
+            Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.Cyan));
+            Console.WriteLine();
+        }
+
+        private void PrintPlayerSection()
+        {
+            Console.WriteLine(ConsoleColors.BoldColorText("┌─ YOUR HAND ──────────────────────────┐", ConsoleColors.BrightGreen));
+
+            // Display cards in rows
+            DisplayCardsInRows(_player.Hand);
+
+            int playerScore = _player.Hand.GetScore();
+            string scoreColor = playerScore > 21 ? ConsoleColors.BrightRed : ConsoleColors.BrightGreen;
+
+            Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.BrightGreen));
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Score: {ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor),-30}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Bet: {ConsoleColors.BoldColorText($"${_player.Bet}", ConsoleColors.BrightYellow),-30}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Balance: {ConsoleColors.BoldColorText($"${_player.Money}", ConsoleColors.BrightYellow),-25}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.BrightGreen));
+            Console.WriteLine();
+        }
+
+        private void PrintGameOutcome()
+        {
+            if (!string.IsNullOrEmpty(WinMessage))
+            {
+                Console.WriteLine();
+
+                if (WinMessage.Contains("win", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightGreen));
+                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-34} ║", ConsoleColors.BrightGreen));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightGreen));
+                }
+                else if (WinMessage.Contains("lost", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightRed));
+                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-34} ║", ConsoleColors.BrightRed));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightRed));
+                }
+                else if (WinMessage.Contains("Tie", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightYellow));
+                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-34} ║", ConsoleColors.BrightYellow));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightYellow));
+                }
+
+                Console.WriteLine();
+            }
+        }
+
+        private void PrintMenu()
+        {
+            Console.WriteLine(ConsoleColors.BoldColorText("┌─ ACTIONS ────────────────────────────┐", ConsoleColors.BrightYellow));
+            Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
+
+            string menu = MenuString;
+            // Calculate center position (40 chars - menu length) / 2
+            int totalWidth = 38;
+            int leftPadding = (totalWidth - menu.Length) / 2;
+            int rightPadding = totalWidth - menu.Length - leftPadding;
+
+            Console.WriteLine($"{ConsoleColors.BrightYellow}│{new string(' ', leftPadding)}{ConsoleColors.BoldColorText(menu, ConsoleColors.Yellow)}{new string(' ', rightPadding)}{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
+
+            Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
+            Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.BrightYellow));
+        }
+
+        private void PrintFooter()
+        {
+            Console.WriteLine();
+            Console.Write($"{ConsoleColors.Dim}Enter your choice: {ConsoleColors.Reset}");
+        }
+
+        private void DisplayCardsInRows(IHand hand)
+        {
+            const int cardHeight = 7;
+
+            for (int line = 0; line < cardHeight; line++)
+            {
+                Console.Write($"{ConsoleColors.Cyan}│{ConsoleColors.Reset} ");
+
+                foreach (var card in hand.PairCards)
+                {
+                    if (card.IsHidden)
+                    {
+                        PrintHiddenCardLine(line);
+                    }
+                    else
+                    {
+                        PrintCardLine(card, line);
+                    }
+                    Console.Write(" ");
+                }
+
+                Console.WriteLine($"{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
+            }
+        }
+
+        private void PrintCardLine(Card card, int lineIndex)
+        {
+            string color = GetCardColor(card);
+            string rank = card.Title[0].ToString();
+            string suit = GetSuitSymbol(card.Title);
+
+            string line = lineIndex switch
+            {
+                0 => $"{color}┌─────┐{ConsoleColors.Reset}",
+                1 => $"{color}│{rank}   │{ConsoleColors.Reset}",
+                2 => $"{color}│     │{ConsoleColors.Reset}",
+                3 => $"{color}│  {suit}  │{ConsoleColors.Reset}",
+                4 => $"{color}│     │{ConsoleColors.Reset}",
+                5 => $"{color}│   {rank}│{ConsoleColors.Reset}",
+                6 => $"{color}└─────┘{ConsoleColors.Reset}",
+                _ => ""
+            };
+
+            Console.Write(line);
+        }
+
+        private void PrintHiddenCardLine(int lineIndex)
+        {
+            string line = lineIndex switch
+            {
+                0 => $"{ConsoleColors.BrightYellow}┌─────┐{ConsoleColors.Reset}",
+                1 => $"{ConsoleColors.BrightYellow}│░░░░░│{ConsoleColors.Reset}",
+                2 => $"{ConsoleColors.BrightYellow}│░░░░░│{ConsoleColors.Reset}",
+                3 => $"{ConsoleColors.BrightYellow}│░░░░░│{ConsoleColors.Reset}",
+                4 => $"{ConsoleColors.BrightYellow}│░░░░░│{ConsoleColors.Reset}",
+                5 => $"{ConsoleColors.BrightYellow}│░░░░░│{ConsoleColors.Reset}",
+                6 => $"{ConsoleColors.BrightYellow}└─────┘{ConsoleColors.Reset}",
+                _ => ""
+            };
+
+            Console.Write(line);
+        }
+
+        private string GetCardColor(Card card)
+        {
+            if (card.Title.Contains('♥') || card.Title.Contains('♦'))
+                return ConsoleColors.BrightRed;
+
+            return ConsoleColors.Blue;
+        }
+
+        private string GetSuitSymbol(string title)
+        {
+            if (title.Contains('♥'))
+                return "♥";
+            if (title.Contains('♦'))
+                return "♦";
+            if (title.Contains('♣'))
+                return "♣";
+            if (title.Contains('♠'))
+                return "♠";
+
+            return "●";
+        }
+
+        private void HideDealerSecondCardIfNeeded(bool shouldHide)
+        {
+            if (_dealer.Hand?.PairCards is not null && _dealer.Hand.PairCards.Count > 1)
+            {
+                _dealer.Hand.PairCards[1].IsHidden = shouldHide;
+            }
+        }
+    }
+}

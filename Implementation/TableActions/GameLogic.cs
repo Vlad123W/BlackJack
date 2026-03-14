@@ -1,9 +1,12 @@
-﻿using BlackJack.Interfaces;
+﻿using BlackJack.Implementation.Data;
+using BlackJack.Implementation.Entities;
+using BlackJack.Implementation.GUI;
+using BlackJack.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.TableActions
 {
     /// <summary>
     /// Main game controller that orchestrates game flow.
@@ -20,7 +23,7 @@ namespace BlackJack.Implementation
         private bool _isGameJustStarted = true;
         private GraphicInterface? _gameDisplay;
         private Stack<IPlayer>? _splitHands;
-        private List<Card> _deckCards = new();
+        private List<Card> _deckCards = [];
 
         /// <summary>
         /// Initializes a new instance of GameLogic.
@@ -42,15 +45,23 @@ namespace BlackJack.Implementation
         /// </summary>
         public void BeginGame()
         {
+            GameDisplay.DisplayWelcomeScreen();
+
+            int roundNumber = 1;
             InitializeRound();
 
             while (true)
             {
+                GameDisplay.DisplayRoundSeparator(roundNumber);
                 PlayMainCycle();
 
                 if (IDealer.EndTheGame)
+                {
+                    GameDisplay.DisplayGoodbyeScreen(_player.Money);
                     break;
+                }
 
+                roundNumber++;
                 InitializeRound();
                 _isGameJustStarted = true;
             }
@@ -202,10 +213,12 @@ namespace BlackJack.Implementation
 
         private bool IsActionValid(PlayerAction action)
         {
-            if (action == PlayerAction.Double && !_gameDisplay?.IsDoubleNeeded == true)
+            // Check if Double is attempted when not allowed
+            if (action == PlayerAction.Double && (_gameDisplay == null || !_gameDisplay.IsDoubleNeeded))
                 return false;
 
-            if (action == PlayerAction.Split && !_gameDisplay?.IsSplitNeeded == true)
+            // Check if Split is attempted when not allowed
+            if (action == PlayerAction.Split && (_gameDisplay == null || !_gameDisplay.IsSplitNeeded))
                 return false;
 
             return true;

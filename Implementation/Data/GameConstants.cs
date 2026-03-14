@@ -1,4 +1,4 @@
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.Data
 {
     /// <summary>
     /// Constants used throughout the game logic.

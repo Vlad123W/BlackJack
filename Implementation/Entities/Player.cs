@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.Entities
 {
     public class Player : IPlayer
     {

@@ -1,6 +1,6 @@
 using BlackJack.Interfaces;
 
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.GUI
 {
     /// <summary>
     /// Factory for creating GraphicInterface instances.

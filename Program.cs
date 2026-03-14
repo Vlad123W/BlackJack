@@ -1,4 +1,6 @@
-﻿using BlackJack.Implementation;
+﻿using BlackJack.Implementation.Entities;
+using BlackJack.Implementation.GUI;
+using BlackJack.Implementation.TableActions;
 using BlackJack.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 

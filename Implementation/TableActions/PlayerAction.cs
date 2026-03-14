@@ -1,4 +1,4 @@
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.TableActions
 {
     /// <summary>
     /// Enumeration of possible player actions in the game.

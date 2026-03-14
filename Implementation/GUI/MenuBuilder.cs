@@ -1,6 +1,6 @@
 using BlackJack.Interfaces;
 
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.GUI
 {
     /// <summary>
     /// Responsible for building menu strings based on available game actions.
@@ -8,7 +8,7 @@ namespace BlackJack.Implementation
     /// </summary>
     public class MenuBuilder
     {
-        private const string BaseMenu = "1.Hit 2.Stand 0.Exit";
+        private const string BaseMenu = "[1] Hit  [2] Stand  [0] Exit";
 
         /// <summary>
         /// Builds the menu string based on available actions.
@@ -22,18 +22,12 @@ namespace BlackJack.Implementation
                 return BaseMenu;
 
             if (canDouble && !canSplit)
-                return InsertBeforeExit(" 3.Double");
+                return "[1] Hit  [2] Stand  [3] Double  [0] Exit";
 
             if (!canDouble && canSplit)
-                return InsertBeforeExit(" 3.Split");
+                return "[1] Hit  [2] Stand  [4] Split  [0] Exit";
 
-            return InsertBeforeExit(" 3.Double 4.Split");
-        }
-
-        private static string InsertBeforeExit(string optionText)
-        {
-            int exitIndex = BaseMenu.IndexOf('0');
-            return BaseMenu.Insert(exitIndex - 1, optionText);
+            return "[1] Hit  [2] Stand  [3] Double  [4] Split  [0] Exit";
         }
     }
 }

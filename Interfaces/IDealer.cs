@@ -1,4 +1,4 @@
-﻿using BlackJack.Implementation;
+﻿using BlackJack.Implementation.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

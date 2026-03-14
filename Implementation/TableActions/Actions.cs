@@ -1,8 +1,10 @@
-﻿using BlackJack.Interfaces;
+﻿using BlackJack.Implementation.Data;
+using BlackJack.Implementation.GUI;
+using BlackJack.Interfaces;
 using System;
 using System.Collections.Generic;
 
-namespace BlackJack.Implementation
+namespace BlackJack.Implementation.TableActions
 {
     /// <summary>
     /// Handles player actions during the game (Hit, Stand, Double, Split).
