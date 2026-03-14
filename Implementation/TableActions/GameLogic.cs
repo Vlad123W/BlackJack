@@ -19,6 +19,7 @@ namespace BlackJack.Implementation.TableActions
         private IActions _actions;
         private readonly IGraphicFactory _graphicFactory;
         private readonly IUserInputHandler _inputHandler;
+        private readonly IPlayerFactory _playerFactory;
 
         private bool _isGameJustStarted = true;
         private GraphicInterface? _gameDisplay;
@@ -29,13 +30,14 @@ namespace BlackJack.Implementation.TableActions
         /// Initializes a new instance of GameLogic.
         /// </summary>
         public GameLogic(IPlayer player, IDealer dealer, IActions actions, 
-            IGraphicFactory graphicFactory, IUserInputHandler inputHandler)
+            IGraphicFactory graphicFactory, IUserInputHandler inputHandler, IPlayerFactory playerFactory)
         {
             _player = player;
             _dealer = dealer;
             _actions = actions;
             _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
             _inputHandler = inputHandler ?? throw new ArgumentNullException(nameof(inputHandler));
+            _playerFactory = playerFactory ?? throw new ArgumentNullException(nameof(playerFactory));
 
             _actions.Hitted += OnPlayerHit;
         }
@@ -258,7 +260,7 @@ namespace BlackJack.Implementation.TableActions
 
             CombineSplitHandsMoney();
 
-            _actions = new Actions(_player, _dealer, _graphicFactory);
+            _actions = new Actions(_player, _dealer, _graphicFactory, _playerFactory);
             _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
 
             return false;

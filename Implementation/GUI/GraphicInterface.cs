@@ -83,7 +83,7 @@ namespace BlackJack.Implementation.GUI
         private void PrintGameHeader()
         {
             Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightBlue));
-            Console.WriteLine(ConsoleColors.BoldColorText("║     ♠️  BLACKJACK GAME  ♠️             ║", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("║    ♠️  BLACKJACK GAME  ♠️             ║", ConsoleColors.BrightBlue));
             Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightBlue));
             Console.WriteLine();
         }
@@ -95,7 +95,8 @@ namespace BlackJack.Implementation.GUI
             // Display cards in rows
             DisplayCardsInRows(_dealer.Hand);
 
-            int dealerScore = _dealer.Hand.GetScore();
+            int dealerScore = _dealer.Hand.GetScore() - _dealer.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Cost;
+
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.Cyan));
             Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow),-30}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
             Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.Cyan));
@@ -151,19 +152,19 @@ namespace BlackJack.Implementation.GUI
 
         private void PrintMenu()
         {
-            Console.WriteLine(ConsoleColors.BoldColorText("┌─ ACTIONS ────────────────────────────┐", ConsoleColors.BrightYellow));
+            Console.WriteLine(ConsoleColors.BoldColorText("┌─ ACTIONS ───────────────────────────────┐", ConsoleColors.BrightYellow));
             Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
 
             string menu = MenuString;
             // Calculate center position (40 chars - menu length) / 2
-            int totalWidth = 38;
+            int totalWidth = 40;
             int leftPadding = (totalWidth - menu.Length) / 2;
             int rightPadding = totalWidth - menu.Length - leftPadding;
 
             Console.WriteLine($"{ConsoleColors.BrightYellow}│{new string(' ', leftPadding)}{ConsoleColors.BoldColorText(menu, ConsoleColors.Yellow)}{new string(' ', rightPadding)}{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
 
             Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
-            Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.BrightYellow));
+            Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────────┘", ConsoleColors.BrightYellow));
         }
 
         private void PrintFooter()
@@ -206,11 +207,11 @@ namespace BlackJack.Implementation.GUI
             string line = lineIndex switch
             {
                 0 => $"{color}┌─────┐{ConsoleColors.Reset}",
-                1 => $"{color}│{rank}   │{ConsoleColors.Reset}",
+                1 => $"{color}│{rank}    │{ConsoleColors.Reset}",
                 2 => $"{color}│     │{ConsoleColors.Reset}",
                 3 => $"{color}│  {suit}  │{ConsoleColors.Reset}",
                 4 => $"{color}│     │{ConsoleColors.Reset}",
-                5 => $"{color}│   {rank}│{ConsoleColors.Reset}",
+                5 => $"{color}│   {rank} │{ConsoleColors.Reset}",
                 6 => $"{color}└─────┘{ConsoleColors.Reset}",
                 _ => ""
             };
@@ -261,7 +262,7 @@ namespace BlackJack.Implementation.GUI
         {
             if (_dealer.Hand?.PairCards is not null && _dealer.Hand.PairCards.Count > 1)
             {
-                _dealer.Hand.PairCards[1].IsHidden = shouldHide;
+                _dealer.Hand.PairCards[GameConstants.PlayerSecondCardIndex].IsHidden = shouldHide;
             }
         }
     }

@@ -1,5 +1,5 @@
 ﻿using BlackJack.Implementation.Entities;
-using BlackJack.Implementation.GUI;
+using BlackJack.Implementation.Factories;
 using BlackJack.Implementation.TableActions;
 using BlackJack.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,9 +29,10 @@ namespace BlackJack
         private static void ConfigureServices(ServiceCollection services)
         {
             // Game state objects
+            services.AddSingleton<IPlayerFactory, PlayerFactory>();
             services.AddSingleton<IPlayer, Player>();
             services.AddSingleton<IDealer, Dealer>();
-
+            
             // UI components
             services.AddSingleton<IGraphicFactory, GraphicFactory>();
             services.AddSingleton<IUserInputHandler, ConsoleUserInputHandler>();

@@ -16,7 +16,7 @@ namespace BlackJack.Implementation.GUI
             Console.WriteLine();
             Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════════════════════╗", ConsoleColors.BrightBlue));
             Console.WriteLine(ConsoleColors.BoldColorText("║                                                      ║", ConsoleColors.BrightBlue));
-            Console.WriteLine(ConsoleColors.BoldColorText("║        ♠️  WELCOME TO BLACKJACK GAME  ♠️              ║", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("║       ♠️  WELCOME TO BLACKJACK GAME  ♠️              ║", ConsoleColors.BrightBlue));
             Console.WriteLine(ConsoleColors.BoldColorText("║                                                      ║", ConsoleColors.BrightBlue));
             Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════════════════════╝", ConsoleColors.BrightBlue));
             Console.WriteLine();
