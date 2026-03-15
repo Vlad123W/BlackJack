@@ -75,12 +75,12 @@ namespace BlackJack.Implementation.GUI
             PrintFooter();
         }
 
-        private void ClearScreen()
+        private static void ClearScreen()
         {
             Console.WriteLine("\n");
         }
 
-        private void PrintGameHeader()
+        private static void PrintGameHeader()
         {
             Console.WriteLine(ConsoleColors.BoldColorText("╔═════════════════════════════════════╗", ConsoleColors.BrightBlue));
             Console.WriteLine(ConsoleColors.BoldColorText("║  ♠️  BLACKJACK GAME  ♠️             ║", ConsoleColors.BrightBlue));
@@ -94,7 +94,6 @@ namespace BlackJack.Implementation.GUI
 
             Console.WriteLine(ConsoleColors.BoldColorText("┌─ DEALER ────────────────────────────┐", ConsoleColors.Cyan));
 
-            // Display cards in rows
             DisplayCardsInRows(_dealer.Hand);
 
             int dealerScore = _dealer.Hand.GetScore() - _dealer.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Cost;
@@ -170,13 +169,13 @@ namespace BlackJack.Implementation.GUI
             Console.WriteLine(ConsoleColors.BoldColorText($"└─────────{new string('─', menu.Length - 4)}┘", ConsoleColors.BrightYellow));
         }
 
-        private void PrintFooter()
+        private static void PrintFooter()
         {
             Console.WriteLine();
             Console.Write($"{ConsoleColors.Dim}Enter your choice: {ConsoleColors.Reset}");
         }
 
-        private void DisplayCardsInRows(IHand hand)
+        private static void DisplayCardsInRows(IHand hand)
         {
             const int cardHeight = 7;
 
@@ -197,11 +196,11 @@ namespace BlackJack.Implementation.GUI
                     Console.Write(" ");
                 }
 
-                Console.WriteLine($"{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
+                Console.WriteLine($"{ConsoleColors.Cyan, -25}│{ConsoleColors.Reset}");
             }
         }
 
-        private void PrintCardLine(Card card, int lineIndex)
+        private static void PrintCardLine(Card card, int lineIndex)
         {
             string color = GetCardColor(card);
             string rank = card.Title[0].ToString();
@@ -222,7 +221,7 @@ namespace BlackJack.Implementation.GUI
             Console.Write(line);
         }
 
-        private void PrintHiddenCardLine(int lineIndex)
+        private static void PrintHiddenCardLine(int lineIndex)
         {
             string line = lineIndex switch
             {
@@ -239,7 +238,7 @@ namespace BlackJack.Implementation.GUI
             Console.Write(line);
         }
 
-        private string GetCardColor(Card card)
+        private static string GetCardColor(Card card)
         {
             if (card.Title.Contains('♥') || card.Title.Contains('♦'))
                 return ConsoleColors.BrightRed;
@@ -247,7 +246,7 @@ namespace BlackJack.Implementation.GUI
             return ConsoleColors.Blue;
         }
 
-        private string GetSuitSymbol(string title)
+        private static string GetSuitSymbol(string title)
         {
             if (title.Contains('♥'))
                 return "♥";

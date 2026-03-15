@@ -32,9 +32,9 @@ namespace BlackJack.Implementation.TableActions
         public GameLogic(IPlayer player, IDealer dealer, IActions actions, 
             IGraphicFactory graphicFactory, IUserInputHandler inputHandler, IPlayerFactory playerFactory)
         {
-            _player = player;
-            _dealer = dealer;
-            _actions = actions;
+            _player = player ?? throw new ArgumentNullException(nameof(player));
+            _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
+            _actions = actions ?? throw new ArgumentNullException(nameof(actions));
             _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
             _inputHandler = inputHandler ?? throw new ArgumentNullException(nameof(inputHandler));
             _playerFactory = playerFactory ?? throw new ArgumentNullException(nameof(playerFactory));
@@ -127,7 +127,7 @@ namespace BlackJack.Implementation.TableActions
         /// </summary>
         private void PlaySplitHandCycle(IPlayer splitPlayer, int handNumber)
         {
-            _actions = new Actions(splitPlayer, _dealer, _graphicFactory);
+            _actions = new Actions(splitPlayer, _dealer, _graphicFactory, _playerFactory);
             Console.WriteLine($"HAND {handNumber}");
 
             _gameDisplay = (GraphicInterface)_graphicFactory.Create(splitPlayer, _dealer, true);
@@ -192,7 +192,8 @@ namespace BlackJack.Implementation.TableActions
 
         private void UpdateMenuForInitialHand()
         {
-            bool isAPair = _player.Hand.PairCards[0].Title[0] == _player.Hand.PairCards[1].Title[0];
+            bool isAPair = _player.Hand.PairCards[0].Title[0] 
+                == _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Title[0];
 
             _gameDisplay!.IsSplitNeeded = isAPair;
             _gameDisplay.IsDoubleNeeded = true;
