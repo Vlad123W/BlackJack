@@ -280,6 +280,7 @@ namespace BlackJack.Implementation.TableActions
 
         private bool ExitGame()
         {
+            GameDisplay.DisplayGoodbyeScreen(_player.Money);
             Environment.Exit(0);
             return true;
         }

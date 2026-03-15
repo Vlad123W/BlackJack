@@ -82,14 +82,16 @@ namespace BlackJack.Implementation.GUI
 
         private void PrintGameHeader()
         {
-            Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightBlue));
-            Console.WriteLine(ConsoleColors.BoldColorText("║    ♠️  BLACKJACK GAME  ♠️             ║", ConsoleColors.BrightBlue));
-            Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("╔═════════════════════════════════════╗", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("║  ♠️  BLACKJACK GAME  ♠️             ║", ConsoleColors.BrightBlue));
+            Console.WriteLine(ConsoleColors.BoldColorText("╚═════════════════════════════════════╝", ConsoleColors.BrightBlue));
             Console.WriteLine();
         }
 
         private void PrintDealerSection()
         {
+
+
             Console.WriteLine(ConsoleColors.BoldColorText("┌─ DEALER ────────────────────────────┐", ConsoleColors.Cyan));
 
             // Display cards in rows
@@ -98,25 +100,26 @@ namespace BlackJack.Implementation.GUI
             int dealerScore = _dealer.Hand.GetScore() - _dealer.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Cost;
 
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.Cyan));
-            Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow),-30}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow), -42}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
             Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.Cyan));
             Console.WriteLine();
         }
 
         private void PrintPlayerSection()
         {
-            Console.WriteLine(ConsoleColors.BoldColorText("┌─ YOUR HAND ──────────────────────────┐", ConsoleColors.BrightGreen));
+            Console.WriteLine(ConsoleColors.BoldColorText("┌─ YOUR HAND ─────────────────────────┐", ConsoleColors.BrightGreen));
 
             // Display cards in rows
             DisplayCardsInRows(_player.Hand);
 
             int playerScore = _player.Hand.GetScore();
             string scoreColor = playerScore > 21 ? ConsoleColors.BrightRed : ConsoleColors.BrightGreen;
+            string playerScoreString = ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor);
 
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.BrightGreen));
-            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Score: {ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor),-30}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
-            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Bet: {ConsoleColors.BoldColorText($"${_player.Bet}", ConsoleColors.BrightYellow),-30}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
-            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Balance: {ConsoleColors.BoldColorText($"${_player.Money}", ConsoleColors.BrightYellow),-25}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Score: {ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor), -42}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Bet: {ConsoleColors.BoldColorText($"${_player.Bet}", ConsoleColors.BrightYellow),-44}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Balance: {ConsoleColors.BoldColorText($"${_player.Money}", ConsoleColors.BrightYellow),-40}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
             Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.BrightGreen));
             Console.WriteLine();
         }
@@ -129,21 +132,21 @@ namespace BlackJack.Implementation.GUI
 
                 if (WinMessage.Contains("win", System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightGreen));
-                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-34} ║", ConsoleColors.BrightGreen));
-                    Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightGreen));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╔═════════════════════════════════════╗", ConsoleColors.BrightGreen));
+                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-35} ║", ConsoleColors.BrightGreen));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╚═════════════════════════════════════╝", ConsoleColors.BrightGreen));
                 }
                 else if (WinMessage.Contains("lost", System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightRed));
-                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-34} ║", ConsoleColors.BrightRed));
-                    Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightRed));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╔═════════════════════════════════════╗", ConsoleColors.BrightRed));
+                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-35} ║", ConsoleColors.BrightRed));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╚═════════════════════════════════════╝", ConsoleColors.BrightRed));
                 }
                 else if (WinMessage.Contains("Tie", System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine(ConsoleColors.BoldColorText("╔══════════════════════════════════════╗", ConsoleColors.BrightYellow));
-                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-34} ║", ConsoleColors.BrightYellow));
-                    Console.WriteLine(ConsoleColors.BoldColorText("╚══════════════════════════════════════╝", ConsoleColors.BrightYellow));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╔═════════════════════════════════════╗", ConsoleColors.BrightYellow));
+                    Console.WriteLine(ConsoleColors.BoldColorText($"║ {WinMessage.Trim(),-35} ║", ConsoleColors.BrightYellow));
+                    Console.WriteLine(ConsoleColors.BoldColorText("╚═════════════════════════════════════╝", ConsoleColors.BrightYellow));
                 }
 
                 Console.WriteLine();
@@ -152,19 +155,19 @@ namespace BlackJack.Implementation.GUI
 
         private void PrintMenu()
         {
-            Console.WriteLine(ConsoleColors.BoldColorText("┌─ ACTIONS ───────────────────────────────┐", ConsoleColors.BrightYellow));
-            Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
 
             string menu = MenuString;
-            // Calculate center position (40 chars - menu length) / 2
-            int totalWidth = 40;
+
+            int totalWidth = menu.Length + 5;
+
             int leftPadding = (totalWidth - menu.Length) / 2;
             int rightPadding = totalWidth - menu.Length - leftPadding;
 
-            Console.WriteLine($"{ConsoleColors.BrightYellow}│{new string(' ', leftPadding)}{ConsoleColors.BoldColorText(menu, ConsoleColors.Yellow)}{new string(' ', rightPadding)}{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
-
+            Console.WriteLine(ConsoleColors.BoldColorText($"┌─ ACTIONS{new string('─', menu.Length - 4)}┐", ConsoleColors.BrightYellow));
             Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
-            Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────────┘", ConsoleColors.BrightYellow));
+            Console.WriteLine($"{ConsoleColors.BrightYellow}│{new string(' ', leftPadding)}{ConsoleColors.BoldColorText(menu, ConsoleColors.Yellow)}{new string(' ', rightPadding)}{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightYellow}│{ConsoleColors.Reset}");
+            Console.WriteLine(ConsoleColors.BoldColorText($"└─────────{new string('─', menu.Length - 4)}┘", ConsoleColors.BrightYellow));
         }
 
         private void PrintFooter()

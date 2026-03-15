@@ -9,9 +9,6 @@ namespace BlackJack.Implementation.GUI
     /// </summary>
     public class CardDisplay
     {
-        private const int CardWidth = 9;
-        private const int CardHeight = 7;
-
         /// <summary>
         /// Renders a card in ASCII art format.
         /// </summary>
@@ -109,6 +106,7 @@ namespace BlackJack.Implementation.GUI
 
         private static string GetSuitSymbol(string title)
         {
+
             if (title.Contains('A'))
                 return "A";
             if (title.Contains('K'))
