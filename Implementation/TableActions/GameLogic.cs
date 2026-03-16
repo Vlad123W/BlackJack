@@ -216,11 +216,9 @@ namespace BlackJack.Implementation.TableActions
 
         private bool IsActionValid(PlayerAction action)
         {
-            // Check if Double is attempted when not allowed
             if (action == PlayerAction.Double && (_gameDisplay == null || !_gameDisplay.IsDoubleNeeded))
                 return false;
 
-            // Check if Split is attempted when not allowed
             if (action == PlayerAction.Split && (_gameDisplay == null || !_gameDisplay.IsSplitNeeded))
                 return false;
 

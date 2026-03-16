@@ -196,24 +196,24 @@ namespace BlackJack.Implementation.GUI
                     Console.Write(" ");
                 }
 
-                Console.WriteLine($"{ConsoleColors.Cyan, -25}│{ConsoleColors.Reset}");
+                Console.WriteLine($"{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
             }
         }
 
         private static void PrintCardLine(Card card, int lineIndex)
         {
             string color = GetCardColor(card);
-            string rank = card.Title[0].ToString();
+            string rank = card.Title.Length == 3 ? card.Title[..2] : card.Title[0].ToString();
             string suit = GetSuitSymbol(card.Title);
 
             string line = lineIndex switch
             {
                 0 => $"{color}┌─────┐{ConsoleColors.Reset}",
-                1 => $"{color}│{rank}    │{ConsoleColors.Reset}",
+                1 => rank == "10" ? $"{color}│{rank}   │{ConsoleColors.Reset}" : $"{color}│{rank}    │{ConsoleColors.Reset}",
                 2 => $"{color}│     │{ConsoleColors.Reset}",
                 3 => $"{color}│  {suit}  │{ConsoleColors.Reset}",
                 4 => $"{color}│     │{ConsoleColors.Reset}",
-                5 => $"{color}│   {rank} │{ConsoleColors.Reset}",
+                5 => rank == "10" ? $"{color}│   {rank}│{ConsoleColors.Reset}" : $"{color}│   {rank} │{ConsoleColors.Reset}",
                 6 => $"{color}└─────┘{ConsoleColors.Reset}",
                 _ => ""
             };
