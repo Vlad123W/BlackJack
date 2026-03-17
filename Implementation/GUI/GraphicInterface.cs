@@ -108,7 +108,6 @@ namespace BlackJack.Implementation.GUI
         {
             Console.WriteLine(ConsoleColors.BoldColorText("┌─ YOUR HAND ─────────────────────────┐", ConsoleColors.BrightGreen));
 
-            // Display cards in rows
             DisplayCardsInRows(_player.Hand);
 
             int playerScore = _player.Hand.GetScore();

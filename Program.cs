@@ -30,7 +30,8 @@ namespace BlackJack
         {
             // Game state objects
             services.AddSingleton<IPlayerFactory, PlayerFactory>();
-            services.AddSingleton<IPlayer, Player>();
+            services.AddSingleton<IActionFactory, ActionFactory>();
+            services.AddTransient<IPlayer, Player>();
             services.AddSingleton<IDealer, Dealer>();
             
             // UI components

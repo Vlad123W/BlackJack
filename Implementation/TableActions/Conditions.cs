@@ -40,6 +40,6 @@ namespace BlackJack.Implementation.TableActions
         }
 
         public static bool CanHit(IHand hand) 
-            => hand.GetScore() < MAX_SCORE;
+            => hand.GetScore() < MAX_SCORE && hand.GetScore() > 0;
     }
 }

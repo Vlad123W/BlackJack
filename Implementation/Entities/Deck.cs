@@ -8,8 +8,8 @@ namespace BlackJack.Implementation.Entities
 {
     public class Deck
     {
-        public readonly List<Card> deck =
-        [
+        public readonly List<Card> deck = new List<Card>
+        {
             new(){ Title = "2♥", Cost = 2},
             new(){ Title = "2♦", Cost = 2},
             new(){ Title = "2♠", Cost = 2},
@@ -74,7 +74,7 @@ namespace BlackJack.Implementation.Entities
             new(){ Title = "A♦", Cost = 11},
             new(){ Title = "A♠", Cost = 11},
             new(){ Title = "A♣", Cost = 11},
-        ];
+        };
 
         public void PrintDeck()
         {

@@ -16,7 +16,7 @@ namespace BlackJack.Implementation.TableActions
         private readonly IPlayer _player;
         private readonly IDealer _dealer;
         private readonly IGraphicFactory _graphicFactory;
-        private readonly IPlayerFactory _playerFactory;
+        private readonly IPlayerFactory? _playerFactory;
 
         public event IActions.Notify? Hitted;
         public event IActions.Notify? GameEnded;
@@ -28,12 +28,12 @@ namespace BlackJack.Implementation.TableActions
         /// <param name="dealer">The dealer object.</param>
         /// <param name="graphicFactory">Factory for creating UI components.</param>
         /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
-        public Actions(IPlayer player, IDealer dealer, IGraphicFactory graphicFactory, IPlayerFactory playerFactory = null)
+        public Actions(IPlayer player, IDealer dealer, IGraphicFactory graphicFactory, IPlayerFactory? playerFactory = null)
         {
             _player = player ?? throw new ArgumentNullException(nameof(player));
             _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
             _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
-            _playerFactory = playerFactory ?? throw new ArgumentNullException(nameof(playerFactory));
+            _playerFactory = playerFactory;
         }
         
         /// <summary>
@@ -174,7 +174,6 @@ namespace BlackJack.Implementation.TableActions
 
             var firstCard = _player.Hand.PairCards[GameConstants.PlayerFirstCardIndex];
             var secondCard = _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex];
-            _player.Hand.Clear();
 
             var hand1 = _playerFactory.Create();
             var hand2 = _playerFactory.Create();

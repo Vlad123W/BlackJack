@@ -16,28 +16,31 @@ namespace BlackJack.Implementation.TableActions
     {
         private readonly IPlayer _player;
         private readonly IDealer _dealer;
-        private IActions _actions;
         private readonly IGraphicFactory _graphicFactory;
         private readonly IUserInputHandler _inputHandler;
         private readonly IPlayerFactory _playerFactory;
+        private readonly IActionFactory _actionsFactory;
 
         private bool _isGameJustStarted = true;
         private GraphicInterface? _gameDisplay;
+        private IActions _actions;
         private Stack<IPlayer>? _splitHands;
         private List<Card> _deckCards = [];
 
         /// <summary>
         /// Initializes a new instance of GameLogic.
         /// </summary>
-        public GameLogic(IPlayer player, IDealer dealer, IActions actions, 
-            IGraphicFactory graphicFactory, IUserInputHandler inputHandler, IPlayerFactory playerFactory)
+        public GameLogic(IDealer dealer, 
+            IGraphicFactory graphicFactory, IUserInputHandler inputHandler, 
+            IPlayerFactory playerFactory, IActionFactory actionsFactory)
         {
-            _player = player ?? throw new ArgumentNullException(nameof(player));
+            _player = playerFactory.Create() ?? throw new ArgumentNullException(nameof(playerFactory));
             _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
-            _actions = actions ?? throw new ArgumentNullException(nameof(actions));
             _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
             _inputHandler = inputHandler ?? throw new ArgumentNullException(nameof(inputHandler));
             _playerFactory = playerFactory ?? throw new ArgumentNullException(nameof(playerFactory));
+            _actionsFactory = actionsFactory ?? throw new ArgumentNullException(nameof(actionsFactory));
+            _actions = _actionsFactory.Create(_player, dealer, graphicFactory, playerFactory);
 
             _actions.Hitted += OnPlayerHit;
         }
@@ -127,7 +130,7 @@ namespace BlackJack.Implementation.TableActions
         /// </summary>
         private void PlaySplitHandCycle(IPlayer splitPlayer, int handNumber)
         {
-            _actions = new Actions(splitPlayer, _dealer, _graphicFactory, _playerFactory);
+            _actions = _actionsFactory.Create(_player, _dealer, _graphicFactory, _playerFactory);
             Console.WriteLine($"HAND {handNumber}");
 
             _gameDisplay = (GraphicInterface)_graphicFactory.Create(splitPlayer, _dealer, true);
@@ -259,7 +262,7 @@ namespace BlackJack.Implementation.TableActions
 
             CombineSplitHandsMoney();
 
-            _actions = new Actions(_player, _dealer, _graphicFactory, _playerFactory);
+            _actions = _actionsFactory.Create(_player, _dealer, _graphicFactory, _playerFactory);
             _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
 
             return false;

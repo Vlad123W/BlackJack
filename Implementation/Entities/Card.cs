@@ -8,7 +8,7 @@ namespace BlackJack.Implementation.Entities
 {
     public class Card
     {
-        private string? title;
+        private string? title = string.Empty;
         public string Title
         {
             get => !IsHidden ? title! : "?";

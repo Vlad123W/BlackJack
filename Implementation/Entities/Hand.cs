@@ -9,9 +9,10 @@ namespace BlackJack.Implementation.Entities
 {
     public class Hand : IHand
     {
-        private List<Card> _paircards = new();
+        // Initialize with an empty list using standard syntax
+        private List<Card> _paircards = [];
         public IList<Card> PairCards { get => _paircards; set => _paircards = value as List<Card> ?? [.. value ?? Enumerable.Empty<Card>()]; }
-        
+
         public void Show()
         {
             foreach (var item in PairCards)
