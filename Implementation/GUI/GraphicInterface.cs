@@ -71,13 +71,16 @@ namespace BlackJack.Implementation.GUI
             PrintDealerSection();
             PrintPlayerSection();
             PrintGameOutcome();
-            PrintMenu();
+            
+            if (string.IsNullOrEmpty(WinMessage))
+                PrintMenu();
+            
             PrintFooter();
         }
 
         private static void ClearScreen()
         {
-            Console.WriteLine("\n");
+            Console.Clear();
         }
 
         private static void PrintGameHeader()
@@ -96,7 +99,16 @@ namespace BlackJack.Implementation.GUI
 
             DisplayCardsInRows(_dealer.Hand);
 
-            int dealerScore = _dealer.Hand.GetScore() - _dealer.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Cost;
+            // If dealer's second card is hidden, show score without that card; otherwise show full score
+            int dealerScore;
+            if (_dealer.Hand.PairCards.Count > GameConstants.DealerSecondCardIndex && _dealer.Hand.PairCards[GameConstants.DealerSecondCardIndex].IsHidden)
+            {
+                dealerScore = _dealer.Hand.GetScore() - _dealer.Hand.PairCards[GameConstants.DealerSecondCardIndex].Cost;
+            }
+            else
+            {
+                dealerScore = _dealer.Hand.GetScore();
+            }
 
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.Cyan));
             Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow), -42}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
@@ -239,10 +251,20 @@ namespace BlackJack.Implementation.GUI
 
         private static string GetCardColor(Card card)
         {
-            if (card.Title.Contains('♥') || card.Title.Contains('♦'))
-                return ConsoleColors.BrightRed;
+            // Каждой масти свой цвет для лучшей различимости
+            if (card.Title.Contains('♥'))
+                return ConsoleColors.BrightRed;           // Сердца - красный
 
-            return ConsoleColors.Blue;
+            if (card.Title.Contains('♦'))
+                return ConsoleColors.BrightMagenta;       // Бубны - магента
+
+            if (card.Title.Contains('♣'))
+                return ConsoleColors.BrightGreen;         // Трефы - зелёный
+
+            if (card.Title.Contains('♠'))
+                return ConsoleColors.BrightBlue;          // Пики - синий
+
+            return ConsoleColors.White;
         }
 
         private static string GetSuitSymbol(string title)
@@ -261,9 +283,9 @@ namespace BlackJack.Implementation.GUI
 
         private void HideDealerSecondCardIfNeeded(bool shouldHide)
         {
-            if (_dealer.Hand?.PairCards is not null && _dealer.Hand.PairCards.Count > 1)
+            if (_dealer.Hand?.PairCards is not null && _dealer.Hand.PairCards.Count > GameConstants.DealerSecondCardIndex)
             {
-                _dealer.Hand.PairCards[GameConstants.PlayerSecondCardIndex].IsHidden = shouldHide;
+                _dealer.Hand.PairCards[GameConstants.DealerSecondCardIndex].IsHidden = shouldHide;
             }
         }
     }

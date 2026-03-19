@@ -1,14 +1,15 @@
 ﻿using BlackJack.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlackJack.Implementation.TableActions
 {
+    
     public static class Conditions
     {
+        private const string winPrefix = "You win!";
+        private const string losePrefix = "You lost!";
+        private const string drawPrefix = "Draw!";
+
         private const int MAX_SCORE = 21;
 
         public static bool IsBlackJack(IHand hand) 
@@ -22,21 +23,18 @@ namespace BlackJack.Implementation.TableActions
 
         public static string EvaluateWinner(IPlayer player, IDealer dealer)
         {
-            string winMessage;
             if (player.Hand.GetScore() > dealer.Hand.GetScore())
             {
-                winMessage = $"You win! {player.Hand.GetScore()} > {dealer.Hand.GetScore()}";
+                return $"{winPrefix} {player.Hand.GetScore()} > {dealer.Hand.GetScore()}";
             }
             else if (player.Hand.GetScore() < dealer.Hand.GetScore())
             {
-                winMessage = $"You lost! {player.Hand.GetScore()} < {dealer.Hand.GetScore()}";
+                return $"{losePrefix} {player.Hand.GetScore()} < {dealer.Hand.GetScore()}";
             }
             else
             {
-                winMessage = "Draw! You have equal scores!";
+                return $"{drawPrefix} You have equal scores!";
             }
-
-            return winMessage;
         }
 
         public static bool CanHit(IHand hand) 

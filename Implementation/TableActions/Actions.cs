@@ -18,9 +18,6 @@ namespace BlackJack.Implementation.TableActions
         private readonly IGraphicFactory _graphicFactory;
         private readonly IPlayerFactory? _playerFactory;
 
-        public event IActions.Notify? Hitted;
-        public event IActions.Notify? GameEnded;
-
         /// <summary>
         /// Initializes a new instance of the Actions class.
         /// </summary>
@@ -40,7 +37,7 @@ namespace BlackJack.Implementation.TableActions
         /// Player requests another card.
         /// </summary>
         /// <returns>True if the round should end (blackjack or bust), false otherwise.</returns>
-        public bool Hit()
+        public ActionResult Hit()
         {
             IDealer.IsHitted = true;
             _player.Hand.PairCards.Add(_dealer.Pull());
@@ -48,47 +45,47 @@ namespace BlackJack.Implementation.TableActions
             if (Conditions.IsBlackJack(_player.Hand))
             {
                 HandlePlayerBlackjack();
-                return true;
+                return new ActionResult(RoundEnded: true, NeedRedraw: true, Message: "You win! Black Jack!\n");
             }
-
-            if (Conditions.IsBusted(_player.Hand))
+            else if (Conditions.IsBusted(_player.Hand) && !HandProcessor.ProcessCards(_player.Hand))
             {
                 HandlePlayerBust();
-                return true;
+                return new ActionResult(RoundEnded: true, NeedRedraw: true, Message: "You lost! You're busted!\n");
             }
 
-            Hitted?.Invoke();
-            return false;
+            return new ActionResult(RoundEnded: false, NeedRedraw: true);
         }
 
         /// <summary>
         /// Player ends their turn and dealer plays.
         /// </summary>
         /// <returns>Always true (round always ends).</returns>
-        public bool Stand()
+        public ActionResult Stand()
         {
             ExecuteDealerTurn();
 
             if (Conditions.IsBusted(_dealer.Hand))
             {
                 HandleDealerBust();
-                return true;
+                return new ActionResult(RoundEnded: true, NeedRedraw: true, Message: "You win! Dealer is busted!\n");
             }
 
-            EvaluateAndDisplayOutcome();
-            return true;
+            var outcome = EvaluateOutcome();
+            return new ActionResult(RoundEnded: true, NeedRedraw: true, Message: outcome);
         }
 
         /// <summary>
         /// Player doubles their bet and takes one more card, then stands automatically.
         /// </summary>
         /// <returns>Always true (round always ends).</returns>
-        public bool Double()
+        public ActionResult Double()
         {
             _player.Bet *= GameConstants.DoubleMultiplier;
-            Hit();
-            Stand();
-            return true;
+            var hitResult = Hit();
+            if (hitResult.RoundEnded)
+                return hitResult;
+
+            return Stand();
         }
 
         /// <summary>
@@ -96,37 +93,35 @@ namespace BlackJack.Implementation.TableActions
         /// </summary>
         /// <param name="splitHands">Stack to store the split hands.</param>
         /// <exception cref="ArgumentNullException">Thrown when splitHands is null.</exception>
-        public void Split(Stack<IPlayer> splitHands)
+        public ActionResult Split(Stack<IPlayer> splitHands)
         {
             ArgumentNullException.ThrowIfNull(splitHands);
 
             if (!CanSplitHand())
-                return;
+                return new ActionResult(RoundEnded: false, NeedRedraw: false, Message: "Cannot split");
 
-            var splitPlayers = CreateSplitHands();
-            splitHands.Push(splitPlayers.Player1);
-            splitHands.Push(splitPlayers.Player2);
+            var (Player1, Player2) = CreateSplitHands();
+            splitHands.Push(Player1);
+            splitHands.Push(Player2);
+
+            return new ActionResult(RoundEnded: false, NeedRedraw: true, Message: "Split performed");
         }
 
         private void HandlePlayerBlackjack()
         {
             decimal payout = _player.Bet * GameConstants.BlackjackPayout;
             _player.ChangeMoney(payout);
-
-            DisplayResult("You win! Black Jack!\n");
         }
 
         private void HandlePlayerBust()
         {
             _player.ChangeMoney(-_player.Bet);
-            DisplayResult("You lost! You're busted!\n");
+            // Do not print here; caller will handle UI
         }
 
         private void HandleDealerBust()
         {
             _player.ChangeMoney(_player.Bet);
-            DisplayResult("You win! Dealer is busted!\n");
-            GameEnded?.Invoke();
         }
 
         private void ExecuteDealerTurn()
@@ -139,7 +134,7 @@ namespace BlackJack.Implementation.TableActions
             }
         }
 
-        private void EvaluateAndDisplayOutcome()
+        private string EvaluateOutcome()
         {
             string outcome = Conditions.EvaluateWinner(_player, _dealer);
 
@@ -152,15 +147,7 @@ namespace BlackJack.Implementation.TableActions
                 _player.ChangeMoney(-_player.Bet);
             }
 
-            DisplayResult(outcome);
-            GameEnded?.Invoke();
-        }
-
-        private void DisplayResult(string message)
-        {
-            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-            display.WinMessage = message;
-            display.Print();
+            return outcome;
         }
 
         private bool CanSplitHand()
@@ -184,9 +171,13 @@ namespace BlackJack.Implementation.TableActions
             hand1.Bet = _player.Bet;
             hand2.Bet = _player.Bet;
 
-            decimal startingMoney = _player.Money;
-            hand1.Money = startingMoney;
-            hand2.Money = startingMoney;
+            // Deduct both bets from the original player's money
+            _player.ChangeMoney(-_player.Bet);
+
+            // Each split hand starts with half the remaining money, but includes their own bet
+            decimal remainingMoney = _player.Money;
+            hand1.Money = remainingMoney;
+            hand2.Money = remainingMoney;
 
             hand1.Hand.PairCards.Add(_dealer.Pull());
             hand2.Hand.PairCards.Add(_dealer.Pull());

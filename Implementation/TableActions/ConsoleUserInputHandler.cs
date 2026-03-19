@@ -26,8 +26,9 @@ namespace BlackJack.Implementation.TableActions
         /// <summary>
         /// Reads a decimal bet amount from the player with validation.
         /// </summary>
+        /// <param name="playerMoney">The player's current balance to validate against.</param>
         /// <returns>The bet amount entered by the user.</returns>
-        public decimal ReadBet()
+        public decimal ReadBet(decimal playerMoney = decimal.MaxValue)
         {
             while (true)
             {
@@ -46,6 +47,14 @@ namespace BlackJack.Implementation.TableActions
 
                 if (decimal.TryParse(input, out decimal bet) && bet > 0)
                 {
+                    // Check if bet exceeds player's balance
+                    if (bet > playerMoney)
+                    {
+                        Console.WriteLine(ConsoleColors.ColorText("╚════════════════════════════════════╝", ConsoleColors.BrightRed));
+                        Console.WriteLine(ConsoleColors.ColorText($"✗ Invalid bet! You only have ${playerMoney}. Please enter a smaller amount.", ConsoleColors.BrightRed));
+                        continue;
+                    }
+
                     Console.WriteLine(ConsoleColors.ColorText("╚════════════════════════════════════╝", ConsoleColors.BrightYellow));
                     return bet;
                 }

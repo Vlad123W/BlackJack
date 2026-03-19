@@ -13,9 +13,10 @@ namespace BlackJack.Interfaces
         char ReadAction();
 
         /// <summary>
-        /// Reads a decimal bet amount from the player.
+        /// Reads a decimal bet amount from the player with optional balance validation.
         /// </summary>
+        /// <param name="playerMoney">The player's current balance. Defaults to MaxValue (no limit).</param>
         /// <returns>The bet amount entered by the user.</returns>
-        decimal ReadBet();
+        decimal ReadBet(decimal playerMoney = decimal.MaxValue);
     }
 }

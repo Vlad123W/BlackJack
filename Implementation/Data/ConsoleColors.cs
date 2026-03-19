@@ -20,6 +20,9 @@ namespace BlackJack.Implementation.Data
         public const string BrightGreen = "\u001b[92m";
         public const string BrightYellow = "\u001b[93m";
         public const string BrightBlue = "\u001b[94m";
+        public const string BrightMagenta = "\u001b[95m";
+        public const string BrightCyan = "\u001b[96m";
+        public const string BrightWhite = "\u001b[97m";
 
         // Background Colors
         public const string BgBlack = "\u001b[40m";

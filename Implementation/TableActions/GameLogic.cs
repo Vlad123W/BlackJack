@@ -41,8 +41,6 @@ namespace BlackJack.Implementation.TableActions
             _playerFactory = playerFactory ?? throw new ArgumentNullException(nameof(playerFactory));
             _actionsFactory = actionsFactory ?? throw new ArgumentNullException(nameof(actionsFactory));
             _actions = _actionsFactory.Create(_player, dealer, graphicFactory, playerFactory);
-
-            _actions.Hitted += OnPlayerHit;
         }
 
         /// <summary>
@@ -73,13 +71,29 @@ namespace BlackJack.Implementation.TableActions
         }
 
         /// <summary>
-        /// Prepares the game for a new round.
+        /// Prepares the game for a new round: clears hands, shuffles, deals cards, and displays initial state.
         /// </summary>
         private void InitializeRound()
         {
-            ClearPreviousHands();
-            ShuffleAndDeal();
-            DisplayInitialState();
+            // Clear previous hands
+            _player.Hand.PairCards.Clear();
+            _dealer.Hand.PairCards.Clear();
+            if (_deckCards.Count > 0)
+                _dealer.Refresh();
+
+            // Shuffle and deal cards
+            _deckCards = _dealer.Shuffle();
+            if (_deckCards.Count < GameConstants.MinCardsToPlay)
+                throw new InvalidOperationException("Not enough cards to initialize the game.");
+
+            _player.Hand.PairCards.Add(_deckCards[GameConstants.PlayerFirstCardIndex]);
+            _player.Hand.PairCards.Add(_deckCards[GameConstants.PlayerSecondCardIndex]);
+            _dealer.Hand.PairCards.Add(_deckCards[GameConstants.DealerFirstCardIndex]);
+            _dealer.Hand.PairCards.Add(_deckCards[GameConstants.DealerSecondCardIndex]);
+
+            // Display initial state
+            _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
+            _gameDisplay.IsDoubleNeeded = true;
         }
 
         /// <summary>
@@ -146,60 +160,30 @@ namespace BlackJack.Implementation.TableActions
             }
         }
 
-        private void ClearPreviousHands()
-        {
-            _player.Hand.PairCards.Clear();
-            _dealer.Hand.PairCards.Clear();
-
-            if (_deckCards.Count > 0)
-                _dealer.Refresh();
-        }
-
-        private void ShuffleAndDeal()
-        {
-            _deckCards = _dealer.Shuffle();
-
-            if (_deckCards.Count < GameConstants.MinCardsToPlay)
-                throw new InvalidOperationException("Not enough cards to initialize the game.");
-
-            _player.Hand.PairCards.Add(_deckCards[GameConstants.PlayerFirstCardIndex]);
-            _player.Hand.PairCards.Add(_deckCards[GameConstants.PlayerSecondCardIndex]);
-
-            _dealer.Hand.PairCards.Add(_deckCards[GameConstants.DealerFirstCardIndex]);
-            _dealer.Hand.PairCards.Add(_deckCards[GameConstants.DealerSecondCardIndex]);
-        }
-
-        private void DisplayInitialState()
-        {
-            _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
-            _gameDisplay.IsDoubleNeeded = true;
-        }
-
+        /// <summary>
+        /// Processes initial bet, adjusts ace if needed, and updates the menu options.
+        /// </summary>
         private void ProcessInitialBet()
         {
-            decimal bet = _inputHandler.ReadBet();
+            if (_gameDisplay == null)
+                throw new InvalidOperationException("Game display not initialized. Call InitializeRound first.");
+
+            decimal bet = _inputHandler.ReadBet(_player.Money);
             _player.Bet = bet;
 
-            AdjustAceIfNeeded();
-            UpdateMenuForInitialHand();
-            _gameDisplay?.Print();
-        }
-
-        private void AdjustAceIfNeeded()
-        {
+            // Adjust ace if both cards are aces
             if (_player.Hand.PairCards.All(x => x.Title.Contains('A')))
             {
                 _player.Hand.PairCards[0].Cost = 1;
             }
-        }
 
-        private void UpdateMenuForInitialHand()
-        {
+            // Configure menu options based on initial hand
             bool isAPair = _player.Hand.PairCards[0].Title[0] 
                 == _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Title[0];
 
-            _gameDisplay!.IsSplitNeeded = isAPair;
+            _gameDisplay.IsSplitNeeded = isAPair;
             _gameDisplay.IsDoubleNeeded = true;
+            _gameDisplay.Print();
         }
 
         private void HandlePlayerBlackjack()
@@ -210,7 +194,7 @@ namespace BlackJack.Implementation.TableActions
             display.WinMessage = "You win! You have a Black Jack!\n";
             display.Print();
         }
-
+        
         private PlayerAction GetPlayerAction()
         {
             char input = _inputHandler.ReadAction();
@@ -230,37 +214,105 @@ namespace BlackJack.Implementation.TableActions
 
         private bool ProcessPlayerAction(PlayerAction action)
         {
-            return action switch
+            // Execute action and interpret ActionResult for UI updates and round flow
+            switch (action)
             {
-                PlayerAction.Hit => _actions.Hit(),
-                PlayerAction.Stand => _actions.Stand(),
-                PlayerAction.Double => _actions.Double(),
-                PlayerAction.Split => ProcessSplit(),
-                PlayerAction.Exit => ExitGame(),
-                _ => false
-            };
+                case PlayerAction.Hit:
+                {
+                    var result = _actions.Hit();
+                    if (result.RoundEnded)
+                    {
+                        if (!string.IsNullOrEmpty(result.Message))
+                        {
+                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                            display.WinMessage = result.Message;
+                            display.Print();
+                        }
+                        else if (result.NeedRedraw)
+                        {
+                            _gameDisplay?.Print();
+                        }
+
+                        return true;
+                    }
+
+                    if (result.NeedRedraw) _gameDisplay?.Print();
+                    return false;
+                }
+                case PlayerAction.Stand:
+                {
+                    var result = _actions.Stand();
+                    if (result.RoundEnded)
+                    {
+                        if (!string.IsNullOrEmpty(result.Message))
+                        {
+                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                            display.WinMessage = result.Message;
+                            display.Print();
+                        }
+                        else if (result.NeedRedraw)
+                        {
+                            _gameDisplay?.Print();
+                        }
+
+                        return true;
+                    }
+
+                    if (result.NeedRedraw) _gameDisplay?.Print();
+                    return false;
+                }
+                case PlayerAction.Double:
+                {
+                    var result = _actions.Double();
+                    if (result.RoundEnded)
+                    {
+                        if (!string.IsNullOrEmpty(result.Message))
+                        {
+                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                            display.WinMessage = result.Message;
+                            display.Print();
+                        }
+                        else if (result.NeedRedraw)
+                        {
+                            _gameDisplay?.Print();
+                        }
+
+                        return true;
+                    }
+
+                    if (result.NeedRedraw) _gameDisplay?.Print();
+                    return false;
+                }
+                case PlayerAction.Split:
+                    return HandleSplit();
+                case PlayerAction.Exit:
+                    return ExitGame();
+                default:
+                    return false;
+            }
         }
 
-        private bool ProcessSplitHandAction(PlayerAction action)
-        {
-            return action switch
-            {
-                PlayerAction.Exit => ExitGame(),
-                PlayerAction.Hit => _actions.Hit(),
-                PlayerAction.Stand => _actions.Stand(),
-                PlayerAction.Double when _gameDisplay?.IsDoubleNeeded == true => _actions.Double(),
-                _ => false
-            };
-        }
-
-        private bool ProcessSplit()
+        /// <summary>
+        /// Handles the split action: creates split hands, plays them, and combines money.
+        /// </summary>
+        private bool HandleSplit()
         {
             _splitHands = new Stack<IPlayer>();
-            _actions.Split(_splitHands);
+            var splitResult = _actions.Split(_splitHands);
+            if (splitResult.NeedRedraw)
+                _gameDisplay?.Print();
+
+            _player.Hand.PairCards.Clear();
 
             PlaySplitHands();
 
-            CombineSplitHandsMoney();
+            decimal totalMoney = _player.Money;
+
+            while (_splitHands?.Count > 0)
+            {
+                totalMoney += _splitHands.Pop().Money;
+            }
+            _player.Money = totalMoney;
 
             _actions = _actionsFactory.Create(_player, _dealer, _graphicFactory, _playerFactory);
             _gameDisplay = (GraphicInterface)_graphicFactory.Create(_player, _dealer, true);
@@ -268,16 +320,81 @@ namespace BlackJack.Implementation.TableActions
             return false;
         }
 
-        private void CombineSplitHandsMoney()
+        private bool ProcessSplitHandAction(PlayerAction action)
         {
-            decimal totalMoney = _player.Money;
-
-            while (_splitHands?.Count > 0)
+            switch (action)
             {
-                totalMoney += _splitHands.Pop().Money;
-            }
+                case PlayerAction.Exit:
+                    return ExitGame();
+                case PlayerAction.Hit:
+                {
+                    var r = _actions.Hit();
+                    if (r.RoundEnded)
+                    {
+                        if (!string.IsNullOrEmpty(r.Message))
+                        {
+                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                            display.WinMessage = r.Message;
+                            display.Print();
+                        }
+                        else if (r.NeedRedraw)
+                        {
+                            _gameDisplay?.Print();
+                        }
 
-            _player.Money = totalMoney;
+                        return true;
+                    }
+
+                    if (r.NeedRedraw) _gameDisplay?.Print();
+                    return false;
+                }
+                case PlayerAction.Stand:
+                {
+                    var r = _actions.Stand();
+                    if (r.RoundEnded)
+                    {
+                        if (!string.IsNullOrEmpty(r.Message))
+                        {
+                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                            display.WinMessage = r.Message;
+                            display.Print();
+                        }
+                        else if (r.NeedRedraw)
+                        {
+                            _gameDisplay?.Print();
+                        }
+
+                        return true;
+                    }
+
+                    if (r.NeedRedraw) _gameDisplay?.Print();
+                    return false;
+                }
+                case PlayerAction.Double when _gameDisplay?.IsDoubleNeeded == true:
+                {
+                    var r = _actions.Double();
+                    if (r.RoundEnded)
+                    {
+                        if (!string.IsNullOrEmpty(r.Message))
+                        {
+                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                            display.WinMessage = r.Message;
+                            display.Print();
+                        }
+                        else if (r.NeedRedraw)
+                        {
+                            _gameDisplay?.Print();
+                        }
+
+                        return true;
+                    }
+
+                    if (r.NeedRedraw) _gameDisplay?.Print();
+                    return false;
+                }
+                default:
+                    return false;
+            }
         }
 
         private bool ExitGame()
@@ -285,11 +402,6 @@ namespace BlackJack.Implementation.TableActions
             GameDisplay.DisplayGoodbyeScreen(_player.Money);
             Environment.Exit(0);
             return true;
-        }
-
-        private void OnPlayerHit()
-        {
-            _gameDisplay?.Print();
         }
     }
 }

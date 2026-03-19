@@ -15,12 +15,12 @@ namespace BlackJack.Implementation.Entities
 
         private List<Card> _readyCards;
         public List<Card> ReadyCards { get => _readyCards; set => _readyCards = value ?? []; }
-       
-        private Random? rand;
+
+        private readonly Random rand = new();
 
         private IHand? _hand = new Hand();
         public IHand Hand { get => _hand; set => _hand = value; }
-       
+
         private static bool _isHitted;
         public static bool IsHitted { get => _isHitted; set => _isHitted = value; }
 
@@ -36,8 +36,12 @@ namespace BlackJack.Implementation.Entities
 
         public List<Card> Shuffle()
         {
-            rand = new();
+            // Clear previous shuffle and reset
+            _readyCards.Clear();
+            mainCards.Clear();
+            mainCards = [.. playDeck.deck];
 
+            // Deal 4 cards for the initial round (2 for player, 2 for dealer)
             for (int i = 0; i < 4 && mainCards.Count > 0; i++)
             {
                 int index = rand.Next(mainCards.Count);
@@ -50,9 +54,8 @@ namespace BlackJack.Implementation.Entities
 
         public Card Pull()
         {
-            rand = new();
-
-            if (mainCards.Count == 0) throw new InvalidOperationException("No more cards in the deck.");
+            if (mainCards.Count == 0) 
+                throw new InvalidOperationException("No more cards in the deck.");
 
             int index = rand.Next(mainCards.Count);
             var card = mainCards[index];
