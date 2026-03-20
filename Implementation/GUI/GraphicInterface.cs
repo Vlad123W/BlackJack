@@ -71,10 +71,10 @@ namespace BlackJack.Implementation.GUI
             PrintDealerSection();
             PrintPlayerSection();
             PrintGameOutcome();
-            
+
             if (string.IsNullOrEmpty(WinMessage))
                 PrintMenu();
-            
+
             PrintFooter();
         }
 
@@ -111,7 +111,7 @@ namespace BlackJack.Implementation.GUI
             }
 
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.Cyan));
-            Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow), -42}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.Cyan}│ Score: {ConsoleColors.BoldColorText(dealerScore.ToString(), ConsoleColors.BrightYellow),-42}{ConsoleColors.Cyan}│{ConsoleColors.Reset}");
             Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.Cyan));
             Console.WriteLine();
         }
@@ -127,7 +127,7 @@ namespace BlackJack.Implementation.GUI
             string playerScoreString = ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor);
 
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.BrightGreen));
-            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Score: {ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor), -42}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
+            Console.WriteLine($"{ConsoleColors.BrightGreen}│ Score: {ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor),-42}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
             Console.WriteLine($"{ConsoleColors.BrightGreen}│ Bet: {ConsoleColors.BoldColorText($"${_player.Bet}", ConsoleColors.BrightYellow),-44}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
             Console.WriteLine($"{ConsoleColors.BrightGreen}│ Balance: {ConsoleColors.BoldColorText($"${_player.Money}", ConsoleColors.BrightYellow),-40}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
             Console.WriteLine(ConsoleColors.BoldColorText("└─────────────────────────────────────┘", ConsoleColors.BrightGreen));

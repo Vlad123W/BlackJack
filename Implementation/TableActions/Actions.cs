@@ -1,9 +1,5 @@
 ﻿using BlackJack.Implementation.Data;
-using BlackJack.Implementation.Entities;
-using BlackJack.Implementation.GUI;
 using BlackJack.Interfaces;
-using System;
-using System.Collections.Generic;
 
 namespace BlackJack.Implementation.TableActions
 {
@@ -32,7 +28,7 @@ namespace BlackJack.Implementation.TableActions
             _graphicFactory = graphicFactory ?? throw new ArgumentNullException(nameof(graphicFactory));
             _playerFactory = playerFactory;
         }
-        
+
         /// <summary>
         /// Player requests another card.
         /// </summary>
@@ -116,7 +112,6 @@ namespace BlackJack.Implementation.TableActions
         private void HandlePlayerBust()
         {
             _player.ChangeMoney(-_player.Bet);
-            // Do not print here; caller will handle UI
         }
 
         private void HandleDealerBust()
@@ -157,7 +152,7 @@ namespace BlackJack.Implementation.TableActions
 
         private (IPlayer Player1, IPlayer Player2) CreateSplitHands()
         {
-            if(_playerFactory == null) throw new ArgumentNullException(nameof(_playerFactory));
+            if (_playerFactory == null) throw new ArgumentNullException(nameof(_playerFactory));
 
             var firstCard = _player.Hand.PairCards[GameConstants.PlayerFirstCardIndex];
             var secondCard = _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex];

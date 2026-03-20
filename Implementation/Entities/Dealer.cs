@@ -1,9 +1,4 @@
 ﻿using BlackJack.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlackJack.Implementation.Entities
 {
@@ -54,7 +49,7 @@ namespace BlackJack.Implementation.Entities
 
         public Card Pull()
         {
-            if (mainCards.Count == 0) 
+            if (mainCards.Count == 0)
                 throw new InvalidOperationException("No more cards in the deck.");
 
             int index = rand.Next(mainCards.Count);
