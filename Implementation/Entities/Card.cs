@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BlackJack.Implementation.Entities
+﻿namespace BlackJack.Implementation.Entities
 {
     public class Card
     {
@@ -15,7 +9,7 @@ namespace BlackJack.Implementation.Entities
 
             set => title = value;
         }
-        
+
         public int Cost { get; set; } = 0;
 
         public bool IsHidden { get; set; } = false;

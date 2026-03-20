@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using BlackJack.Implementation.Entities;
+﻿using BlackJack.Implementation.Entities;
 
 namespace BlackJack.Interfaces
 {

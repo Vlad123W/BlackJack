@@ -2,9 +2,6 @@
 using BlackJack.Implementation.Entities;
 using BlackJack.Implementation.GUI;
 using BlackJack.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace BlackJack.Implementation.TableActions
 {
@@ -30,8 +27,8 @@ namespace BlackJack.Implementation.TableActions
         /// <summary>
         /// Initializes a new instance of GameLogic.
         /// </summary>
-        public GameLogic(IDealer dealer, 
-            IGraphicFactory graphicFactory, IUserInputHandler inputHandler, 
+        public GameLogic(IDealer dealer,
+            IGraphicFactory graphicFactory, IUserInputHandler inputHandler,
             IPlayerFactory playerFactory, IActionFactory actionsFactory)
         {
             _player = playerFactory.Create() ?? throw new ArgumentNullException(nameof(playerFactory));
@@ -178,7 +175,7 @@ namespace BlackJack.Implementation.TableActions
             }
 
             // Configure menu options based on initial hand
-            bool isAPair = _player.Hand.PairCards[0].Title[0] 
+            bool isAPair = _player.Hand.PairCards[0].Title[0]
                 == _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Title[0];
 
             _gameDisplay.IsSplitNeeded = isAPair;
@@ -194,7 +191,7 @@ namespace BlackJack.Implementation.TableActions
             display.WinMessage = "You win! You have a Black Jack!\n";
             display.Print();
         }
-        
+
         private PlayerAction GetPlayerAction()
         {
             char input = _inputHandler.ReadAction();
@@ -218,71 +215,71 @@ namespace BlackJack.Implementation.TableActions
             switch (action)
             {
                 case PlayerAction.Hit:
-                {
-                    var result = _actions.Hit();
-                    if (result.RoundEnded)
                     {
-                        if (!string.IsNullOrEmpty(result.Message))
+                        var result = _actions.Hit();
+                        if (result.RoundEnded)
                         {
-                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-                            display.WinMessage = result.Message;
-                            display.Print();
-                        }
-                        else if (result.NeedRedraw)
-                        {
-                            _gameDisplay?.Print();
+                            if (!string.IsNullOrEmpty(result.Message))
+                            {
+                                var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                                display.WinMessage = result.Message;
+                                display.Print();
+                            }
+                            else if (result.NeedRedraw)
+                            {
+                                _gameDisplay?.Print();
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        if (result.NeedRedraw) _gameDisplay?.Print();
+                        return false;
                     }
-
-                    if (result.NeedRedraw) _gameDisplay?.Print();
-                    return false;
-                }
                 case PlayerAction.Stand:
-                {
-                    var result = _actions.Stand();
-                    if (result.RoundEnded)
                     {
-                        if (!string.IsNullOrEmpty(result.Message))
+                        var result = _actions.Stand();
+                        if (result.RoundEnded)
                         {
-                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-                            display.WinMessage = result.Message;
-                            display.Print();
-                        }
-                        else if (result.NeedRedraw)
-                        {
-                            _gameDisplay?.Print();
+                            if (!string.IsNullOrEmpty(result.Message))
+                            {
+                                var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                                display.WinMessage = result.Message;
+                                display.Print();
+                            }
+                            else if (result.NeedRedraw)
+                            {
+                                _gameDisplay?.Print();
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        if (result.NeedRedraw) _gameDisplay?.Print();
+                        return false;
                     }
-
-                    if (result.NeedRedraw) _gameDisplay?.Print();
-                    return false;
-                }
                 case PlayerAction.Double:
-                {
-                    var result = _actions.Double();
-                    if (result.RoundEnded)
                     {
-                        if (!string.IsNullOrEmpty(result.Message))
+                        var result = _actions.Double();
+                        if (result.RoundEnded)
                         {
-                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-                            display.WinMessage = result.Message;
-                            display.Print();
-                        }
-                        else if (result.NeedRedraw)
-                        {
-                            _gameDisplay?.Print();
+                            if (!string.IsNullOrEmpty(result.Message))
+                            {
+                                var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                                display.WinMessage = result.Message;
+                                display.Print();
+                            }
+                            else if (result.NeedRedraw)
+                            {
+                                _gameDisplay?.Print();
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        if (result.NeedRedraw) _gameDisplay?.Print();
+                        return false;
                     }
-
-                    if (result.NeedRedraw) _gameDisplay?.Print();
-                    return false;
-                }
                 case PlayerAction.Split:
                     return HandleSplit();
                 case PlayerAction.Exit:
@@ -327,71 +324,71 @@ namespace BlackJack.Implementation.TableActions
                 case PlayerAction.Exit:
                     return ExitGame();
                 case PlayerAction.Hit:
-                {
-                    var r = _actions.Hit();
-                    if (r.RoundEnded)
                     {
-                        if (!string.IsNullOrEmpty(r.Message))
+                        var r = _actions.Hit();
+                        if (r.RoundEnded)
                         {
-                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-                            display.WinMessage = r.Message;
-                            display.Print();
-                        }
-                        else if (r.NeedRedraw)
-                        {
-                            _gameDisplay?.Print();
+                            if (!string.IsNullOrEmpty(r.Message))
+                            {
+                                var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                                display.WinMessage = r.Message;
+                                display.Print();
+                            }
+                            else if (r.NeedRedraw)
+                            {
+                                _gameDisplay?.Print();
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        if (r.NeedRedraw) _gameDisplay?.Print();
+                        return false;
                     }
-
-                    if (r.NeedRedraw) _gameDisplay?.Print();
-                    return false;
-                }
                 case PlayerAction.Stand:
-                {
-                    var r = _actions.Stand();
-                    if (r.RoundEnded)
                     {
-                        if (!string.IsNullOrEmpty(r.Message))
+                        var r = _actions.Stand();
+                        if (r.RoundEnded)
                         {
-                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-                            display.WinMessage = r.Message;
-                            display.Print();
-                        }
-                        else if (r.NeedRedraw)
-                        {
-                            _gameDisplay?.Print();
+                            if (!string.IsNullOrEmpty(r.Message))
+                            {
+                                var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                                display.WinMessage = r.Message;
+                                display.Print();
+                            }
+                            else if (r.NeedRedraw)
+                            {
+                                _gameDisplay?.Print();
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        if (r.NeedRedraw) _gameDisplay?.Print();
+                        return false;
                     }
-
-                    if (r.NeedRedraw) _gameDisplay?.Print();
-                    return false;
-                }
                 case PlayerAction.Double when _gameDisplay?.IsDoubleNeeded == true:
-                {
-                    var r = _actions.Double();
-                    if (r.RoundEnded)
                     {
-                        if (!string.IsNullOrEmpty(r.Message))
+                        var r = _actions.Double();
+                        if (r.RoundEnded)
                         {
-                            var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
-                            display.WinMessage = r.Message;
-                            display.Print();
-                        }
-                        else if (r.NeedRedraw)
-                        {
-                            _gameDisplay?.Print();
+                            if (!string.IsNullOrEmpty(r.Message))
+                            {
+                                var display = (GraphicInterface)_graphicFactory.Create(_player, _dealer, false);
+                                display.WinMessage = r.Message;
+                                display.Print();
+                            }
+                            else if (r.NeedRedraw)
+                            {
+                                _gameDisplay?.Print();
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        if (r.NeedRedraw) _gameDisplay?.Print();
+                        return false;
                     }
-
-                    if (r.NeedRedraw) _gameDisplay?.Print();
-                    return false;
-                }
                 default:
                     return false;
             }

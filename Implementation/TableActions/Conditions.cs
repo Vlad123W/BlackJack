@@ -1,9 +1,8 @@
 ﻿using BlackJack.Interfaces;
-using System.Linq;
 
 namespace BlackJack.Implementation.TableActions
 {
-    
+
     public static class Conditions
     {
         private const string winPrefix = "You win!";
@@ -12,10 +11,10 @@ namespace BlackJack.Implementation.TableActions
 
         private const int MAX_SCORE = 21;
 
-        public static bool IsBlackJack(IHand hand) 
+        public static bool IsBlackJack(IHand hand)
             => hand.GetScore() == MAX_SCORE;
 
-        public static bool IsBusted(IHand hand) 
+        public static bool IsBusted(IHand hand)
             => hand.GetScore() > MAX_SCORE;
 
         public static bool FiveCardsInHand(IHand hand)
@@ -37,7 +36,7 @@ namespace BlackJack.Implementation.TableActions
             }
         }
 
-        public static bool CanHit(IHand hand) 
+        public static bool CanHit(IHand hand)
             => hand.GetScore() < MAX_SCORE && hand.GetScore() > 0;
     }
 }

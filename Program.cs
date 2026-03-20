@@ -33,7 +33,7 @@ namespace BlackJack
             services.AddSingleton<IActionFactory, ActionFactory>();
             services.AddTransient<IPlayer, Player>();
             services.AddSingleton<IDealer, Dealer>();
-            
+
             // UI components
             services.AddSingleton<IGraphicFactory, GraphicFactory>();
             services.AddSingleton<IUserInputHandler, ConsoleUserInputHandler>();

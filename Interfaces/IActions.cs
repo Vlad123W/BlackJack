@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-namespace BlackJack.Interfaces
+﻿namespace BlackJack.Interfaces
 {
     /// <summary>
     /// Defines the contract for player actions during the game.

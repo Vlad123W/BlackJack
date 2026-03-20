@@ -1,9 +1,4 @@
 ﻿using BlackJack.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlackJack.Implementation.Entities
 {
@@ -14,7 +9,7 @@ namespace BlackJack.Implementation.Entities
 
         private decimal _money = 1000;
         public decimal Money { get => _money; set => _money = value; }
-        
+
         private decimal _bet;
         public decimal Bet
         {

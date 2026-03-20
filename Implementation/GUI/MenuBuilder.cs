@@ -1,5 +1,3 @@
-using BlackJack.Interfaces;
-
 namespace BlackJack.Implementation.GUI
 {
     /// <summary>
