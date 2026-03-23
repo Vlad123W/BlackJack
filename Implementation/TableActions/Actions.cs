@@ -166,10 +166,8 @@ namespace BlackJack.Implementation.TableActions
             hand1.Bet = _player.Bet;
             hand2.Bet = _player.Bet;
 
-            // Deduct both bets from the original player's money
             _player.ChangeMoney(-_player.Bet);
 
-            // Each split hand starts with half the remaining money, but includes their own bet
             decimal remainingMoney = _player.Money;
             hand1.Money = remainingMoney;
             hand2.Money = remainingMoney;

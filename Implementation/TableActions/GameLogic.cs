@@ -72,13 +72,11 @@ namespace BlackJack.Implementation.TableActions
         /// </summary>
         private void InitializeRound()
         {
-            // Clear previous hands
             _player.Hand.PairCards.Clear();
             _dealer.Hand.PairCards.Clear();
             if (_deckCards.Count > 0)
                 _dealer.Refresh();
 
-            // Shuffle and deal cards
             _deckCards = _dealer.Shuffle();
             if (_deckCards.Count < GameConstants.MinCardsToPlay)
                 throw new InvalidOperationException("Not enough cards to initialize the game.");
@@ -168,13 +166,8 @@ namespace BlackJack.Implementation.TableActions
             decimal bet = _inputHandler.ReadBet(_player.Money);
             _player.Bet = bet;
 
-            // Adjust ace if both cards are aces
-            if (_player.Hand.PairCards.All(x => x.Title.Contains('A')))
-            {
-                _player.Hand.PairCards[0].Cost = 1;
-            }
+            HandProcessor.ProcessCards(_player.Hand);
 
-            // Configure menu options based on initial hand
             bool isAPair = _player.Hand.PairCards[0].Title[0]
                 == _player.Hand.PairCards[GameConstants.PlayerSecondCardIndex].Title[0];
 

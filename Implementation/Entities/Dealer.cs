@@ -31,12 +31,10 @@ namespace BlackJack.Implementation.Entities
 
         public List<Card> Shuffle()
         {
-            // Clear previous shuffle and reset
             _readyCards.Clear();
             mainCards.Clear();
             mainCards = [.. playDeck.deck];
 
-            // Deal 4 cards for the initial round (2 for player, 2 for dealer)
             for (int i = 0; i < 4 && mainCards.Count > 0; i++)
             {
                 int index = rand.Next(mainCards.Count);
@@ -67,10 +65,7 @@ namespace BlackJack.Implementation.Entities
 
             foreach (var item in playDeck.deck)
             {
-                if (item.IsHidden)
-                {
-                    item.IsHidden = false;
-                }
+                item.IsHidden = false;
             }
         }
     }

@@ -5,7 +5,7 @@
         private string? title = string.Empty;
         public string Title
         {
-            get => !IsHidden ? title! : "?";
+            get => title!;
 
             set => title = value;
         }
