@@ -58,7 +58,10 @@ namespace BlackJack.Implementation.GUI
             _dealer = dealer ?? throw new ArgumentNullException(nameof(dealer));
             _menuBuilder = new MenuBuilder();
 
-            HideDealerSecondCardIfNeeded(hideDealerSecond);
+            if (_dealer.Hand.PairCards[1] is not null)
+                _dealer.Hand.PairCards[1].IsHidden = hideDealerSecond;
+            else
+                throw new ArgumentNullException(nameof(dealer));
         }
 
         /// <summary>
@@ -99,7 +102,6 @@ namespace BlackJack.Implementation.GUI
 
             DisplayCardsInRows(_dealer.Hand);
 
-            // If dealer's second card is hidden, show score without that card; otherwise show full score
             int dealerScore;
             if (_dealer.Hand.PairCards.Count > GameConstants.DealerSecondCardIndex && _dealer.Hand.PairCards[GameConstants.DealerSecondCardIndex].IsHidden)
             {
@@ -124,7 +126,6 @@ namespace BlackJack.Implementation.GUI
 
             int playerScore = _player.Hand.GetScore();
             string scoreColor = playerScore > 21 ? ConsoleColors.BrightRed : ConsoleColors.BrightGreen;
-            string playerScoreString = ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor);
 
             Console.WriteLine(ConsoleColors.BoldColorText($"├─────────────────────────────────────┤", ConsoleColors.BrightGreen));
             Console.WriteLine($"{ConsoleColors.BrightGreen}│ Score: {ConsoleColors.BoldColorText(playerScore.ToString(), scoreColor),-42}{ConsoleColors.BrightGreen}│{ConsoleColors.Reset}");
@@ -204,6 +205,7 @@ namespace BlackJack.Implementation.GUI
                     {
                         PrintCardLine(card, line);
                     }
+
                     Console.Write(" ");
                 }
 
@@ -279,14 +281,6 @@ namespace BlackJack.Implementation.GUI
                 return "♠";
 
             return "●";
-        }
-
-        private void HideDealerSecondCardIfNeeded(bool shouldHide)
-        {
-            if (_dealer.Hand?.PairCards is not null && _dealer.Hand.PairCards.Count > GameConstants.DealerSecondCardIndex)
-            {
-                _dealer.Hand.PairCards[GameConstants.DealerSecondCardIndex].IsHidden = shouldHide;
-            }
         }
     }
 }
